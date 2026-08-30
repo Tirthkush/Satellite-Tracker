@@ -113,7 +113,7 @@
         #provenance-panel {
             top: 15px;
             right: 15px;
-            width: 280px;
+            width: 290px;
             font-size: 0.75rem;
         }
 
@@ -223,7 +223,7 @@
             transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             padding: 8px 16px;
         }
 
@@ -234,9 +234,14 @@
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.75rem;
         }
 
-        .time-btn:hover { background: #30363d; }
+        .time-btn:hover, .time-btn.active-speed {
+            background: #1f6feb;
+            color: #ffffff;
+            border-color: #388bfd;
+        }
 
         /* Loading Indicator Overlay */
         #loading-overlay {
@@ -278,7 +283,7 @@
 
     <!-- Header Panel -->
     <div id="header-panel" class="ui-card">
-        <h1><i class="fas => fa-globe-americas"></i> SatTracker 3D</h1>
+        <h1><i class="fas fa-globe-americas"></i> SatTracker 3D</h1>
         <div class="search-box">
             <input type="text" id="search-input" placeholder="Search satellite or NORAD ID...">
         </div>
@@ -297,12 +302,12 @@
             Data Pipeline 
             <i class="fas fa-sync-alt" id="force-refresh-btn" style="cursor: pointer;" title="Force Network Refresh"></i>
         </h3>
-        <div class="prov-row"><span class="prov-label">Source:</span><span class="prov-value" id="prov-source">--</span></div>
-        <div class="prov-row"><span class="prov-label">Feed:</span><span class="prov-value" id="prov-feed">--</span></div>
-        <div class="prov-row"><span class="prov-label">Status:</span><span id="prov-status" class="badge">--</span></div>
-        <div class="prov-row"><span class="prov-label">Fetch (UTC):</span><span class="prov-value" id="prov-fetch-time">--</span></div>
-        <div class="prov-row"><span class="prov-label">Objects:</span><span class="prov-value" id="prov-objects">--</span></div>
-        <div class="prov-row"><span class="prov-label">Median TLE Age:</span><span class="prov-value" id="prov-tle-age">--</span></div>
+        <div class="prov-row"><span class="prov-label">SOURCE:</span><span class="prov-value" id="prov-source">--</span></div>
+        <div class="prov-row"><span class="prov-label">FEED:</span><span class="prov-value" id="prov-feed">--</span></div>
+        <div class="prov-row"><span class="prov-label">STATUS:</span><span id="prov-status" class="badge">--</span></div>
+        <div class="prov-row"><span class="prov-label">FETCH (UTC):</span><span class="prov-value" id="prov-fetch-time">--</span></div>
+        <div class="prov-row"><span class="prov-label">OBJECTS:</span><span class="prov-value" id="prov-objects">--</span></div>
+        <div class="prov-row"><span class="prov-label">MEDIAN TLE AGE:</span><span class="prov-value" id="prov-tle-age">--</span></div>
     </div>
 
     <!-- Satellite Detail Panel -->
@@ -334,7 +339,12 @@
     <div id="time-panel" class="ui-card">
         <button class="time-btn" id="time-reset"><i class="fas fa-undo"></i> Realtime</button>
         <button class="time-btn" id="time-pause"><i class="fas fa-pause"></i></button>
-        <input type="range" id="time-slider" min="-86400" max="86400" value="0" style="width: 140px;">
+        <button class="time-btn speed-btn active-speed" data-speed="1">1x</button>
+        <button class="time-btn speed-btn" data-speed="10">10x</button>
+        <button class="time-btn speed-btn" data-speed="60">60x</button>
+        <button class="time-btn speed-btn" data-speed="300">300x</button>
+        <button class="time-btn speed-btn" data-speed="3600">3600x</button>
+        <input type="range" id="time-slider" min="-86400" max="86400" value="0" style="width: 110px;">
         <span id="time-display" style="font-family: monospace; font-size: 0.8rem;">LIVE</span>
     </div>
 
@@ -352,7 +362,7 @@ HUBBLE ST
 2 20580  28.4690  85.1200 0002800  95.4000 264.8000 15.08000000854001`;
 
         // ==========================================
-        // PHASE 1: DATA SERVICE LAYER & PROVENANCE
+        // PHASE 1: CENTRAL DATASERVICE MODULE
         // ==========================================
         const DataService = {
             cache: new Map(),
@@ -369,10 +379,9 @@ HUBBLE ST
             fetchFeed: async function(category, options = {}) {
                 const { forceRefresh = false } = options;
 
-                // 1. Cache hit logic (Distinguish Online Cache vs Offline Cache)
+                // 1. Cache Check (Immediate hit if not force-refreshing)
                 if (!forceRefresh && this.cache.has(category)) {
                     const cachedEntry = this.cache.get(category);
-                    cachedEntry.provenance.status = navigator.onLine ? 'CACHED (ONLINE)' : 'OFFLINE — CACHED DATA';
                     return cachedEntry;
                 }
 
@@ -398,7 +407,7 @@ HUBBLE ST
 
                 while (attempt <= maxRetries) {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s Timeout
+                    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15-second AbortController Timeout
 
                     try {
                         const response = await fetch(url, { signal: controller.signal });
@@ -413,24 +422,25 @@ HUBBLE ST
                         }
 
                         const textData = await response.text();
-                        if (!textData || textData.trim().length === 0) {
-                            throw new Error('MALFORMED_EMPTY_PAYLOAD');
-                        }
-
                         const parsedPayload = this._processPayload(category, textData, response.status);
+
+                        // Save valid dataset to runtime cache
                         this.cache.set(category, parsedPayload);
                         return parsedPayload;
 
                     } catch (err) {
                         const isAbortError = err.name === 'AbortError';
-                        const isNonRetryable = err.message.includes('HTTP_403') || err.message.includes('HTTP_429');
+                        const isNonRetryable = err.message.includes('HTTP_403') || 
+                                               err.message.includes('HTTP_429') || 
+                                               err.message.includes('MALFORMED_TLE_PAYLOAD');
 
+                        // Stop retry loop on fast-fail error or reaching 3 total attempts
                         if (isNonRetryable || attempt === maxRetries) {
                             return this._handleFallback(category, err, isAbortError);
                         }
 
                         await new Promise(res => setTimeout(res, delayMs));
-                        delayMs *= 2;
+                        delayMs *= 2; // Backoff: Attempt 1 -> wait 1s -> Attempt 2 -> wait 2s -> Attempt 3
                         attempt++;
                     } finally {
                         clearTimeout(timeoutId);
@@ -439,20 +449,42 @@ HUBBLE ST
             },
 
             _processPayload: function(category, rawText, httpStatus) {
+                if (!rawText || rawText.trim().length === 0) {
+                    throw new Error('MALFORMED_TLE_PAYLOAD');
+                }
+
                 const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 const epochTimestamps = [];
+                let validObjectsCount = 0;
 
+                // Flexible multi-line parser (handles 3-line and missing-name 2-line entries)
                 for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].startsWith('1 ')) {
-                        const epochStr = lines[i].substring(18, 32).trim();
-                        const yearTwoDigit = parseInt(epochStr.substring(0, 2), 10);
-                        const dayOfYear = parseFloat(epochStr.substring(2));
-                        const fullYear = (yearTwoDigit < 57) ? 2000 + yearTwoDigit : 1900 + yearTwoDigit;
+                    if (lines[i].startsWith('1 ') && (i + 1 < lines.length) && lines[i+1].startsWith('2 ')) {
+                        const line1 = lines[i];
+                        const line2 = lines[i+1];
 
-                        const epochDate = new Date(Date.UTC(fullYear, 0, 1));
-                        epochDate.setMilliseconds((dayOfYear - 1) * 86400 * 1000);
-                        epochTimestamps.push(epochDate.getTime());
+                        try {
+                            const satrec = satellite.twoline2satrec(line1, line2);
+                            if (satrec && !isNaN(satrec.inclo)) {
+                                validObjectsCount++;
+
+                                // Extract YYDDD.DDDDDDDD from Line 1
+                                const epochStr = line1.substring(18, 32).trim();
+                                const yearTwoDigit = parseInt(epochStr.substring(0, 2), 10);
+                                const dayOfYear = parseFloat(epochStr.substring(2));
+                                const fullYear = (yearTwoDigit < 57) ? 2000 + yearTwoDigit : 1900 + yearTwoDigit;
+
+                                const epochDate = new Date(Date.UTC(fullYear, 0, 1));
+                                epochDate.setMilliseconds((dayOfYear - 1) * 86400 * 1000);
+                                epochTimestamps.push(epochDate.getTime());
+                            }
+                        } catch (e) {}
                     }
+                }
+
+                // REJECT PAYLOAD IF 0 VALID TLE OBJECTS EXIST
+                if (validObjectsCount === 0) {
+                    throw new Error('MALFORMED_TLE_PAYLOAD');
                 }
 
                 const nowUtc = Date.now();
@@ -486,7 +518,7 @@ HUBBLE ST
                         status: statusBadge,
                         fetchTimeUtc: new Date(nowUtc).toISOString(),
                         httpStatus: httpStatus,
-                        objectCount: epochTimestamps.length,
+                        objectCount: validObjectsCount,
                         oldestEpoch: oldestIso,
                         newestEpoch: newestIso,
                         medianAgeHours: medianAgeHours
@@ -495,26 +527,45 @@ HUBBLE ST
             },
 
             _handleFallback: function(category, error, isAbort) {
+                // Fallback 1: Use warm in-memory cache if available
                 if (this.cache.has(category)) {
                     const cached = this.cache.get(category);
-                    cached.provenance.status = 'OFFLINE — CACHED DATA';
-                    return cached;
+                    return {
+                        rawText: cached.rawText,
+                        provenance: {
+                            ...cached.provenance,
+                            status: 'OFFLINE — CACHED DATA' // NEVER DISPLAY LIVE ON CACHE FALLBACK
+                        }
+                    };
                 }
 
-                return {
-                    rawText: STATIC_FALLBACK_TLE_DATA,
-                    provenance: {
-                        source: 'Emergency Seed',
-                        feed: category,
-                        status: 'OFFLINE — SAMPLE DATA',
-                        fetchTimeUtc: new Date().toISOString(),
-                        httpStatus: error.message.includes('HTTP') ? error.message : (isAbort ? 'TIMEOUT' : 'NETWORK_ERROR'),
-                        objectCount: 3,
-                        oldestEpoch: 'N/A',
-                        newestEpoch: 'N/A',
-                        medianAgeHours: 0
-                    }
-                };
+                // Fallback 2: Parse static sample data
+                try {
+                    const samplePayload = this._processPayload(category, STATIC_FALLBACK_TLE_DATA, 'FALLBACK_SEED');
+                    return {
+                        rawText: samplePayload.rawText,
+                        provenance: {
+                            ...samplePayload.provenance,
+                            source: 'Emergency Seed',
+                            status: 'OFFLINE — SAMPLE DATA' // NEVER DISPLAY LIVE ON SAMPLE DATA
+                        }
+                    };
+                } catch (e) {
+                    return {
+                        rawText: '',
+                        provenance: {
+                            source: 'None',
+                            feed: category,
+                            status: 'FETCH FAILED',
+                            fetchTimeUtc: new Date().toISOString(),
+                            httpStatus: error.message,
+                            objectCount: 0,
+                            oldestEpoch: 'N/A',
+                            newestEpoch: 'N/A',
+                            medianAgeHours: 0
+                        }
+                    };
+                }
             }
         };
 
@@ -525,13 +576,17 @@ HUBBLE ST
         let earthMesh, atmosphereMesh;
         let satellitePoints, satelliteGeometry, satelliteMaterial;
         let activeSatellites = [];
+        let filteredSatellites = [];
         let selectedSatellite = null;
         let orbitPathLine = null;
 
         let observerGd = { latitude: 0, longitude: 0, height: 0 };
         let simulationOffsetMs = 0;
+        let timeMultiplier = 1;
         let isPaused = false;
+        let lastFrameTimestamp = Date.now();
         let currentGroup = 'stations';
+        let searchQuery = '';
 
         // Initialize Application
         document.addEventListener('DOMContentLoaded', () => {
@@ -560,7 +615,7 @@ HUBBLE ST
             controls.minDistance = 8;
             controls.maxDistance = 80;
 
-            // Lighting
+            // Lighting Setup
             const ambientLight = new THREE.AmbientLight(0x333333);
             scene.add(ambientLight);
 
@@ -572,7 +627,6 @@ HUBBLE ST
             const earthRadius = 6.371; // Base unit scaled
             const geometry = new THREE.SphereGeometry(earthRadius, 64, 64);
             
-            // Texture Loader Fallback Styling
             const material = new THREE.MeshPhongMaterial({
                 color: 0x1b2a4a,
                 emissive: 0x081124,
@@ -620,7 +674,7 @@ HUBBLE ST
                         observerGd.longitude = pos.coords.longitude * (Math.PI / 180);
                         observerGd.height = (pos.coords.altitude || 0) / 1000;
                     },
-                    (err) => console.log('Geolocation denied. Defaulting to (0,0)')
+                    (err) => console.log('Geolocation unavailable. Defaulting observer to (0,0)')
                 );
             }
         }
@@ -645,36 +699,70 @@ HUBBLE ST
             activeSatellites = [];
 
             const lines = tleText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const positions = [];
-            const colors = [];
+            const parsedSats = [];
 
-            for (let i = 0; i < lines.length; i += 3) {
-                if (i + 2 >= lines.length) break;
-                const name = lines[i].startsWith('1 ') ? `SAT-${i}` : lines[i];
-                const line1 = lines[i].startsWith('1 ') ? lines[i] : lines[i+1];
-                const line2 = lines[i].startsWith('1 ') ? lines[i+1] : lines[i+2];
+            // Robust multi-line loop extracting names and orbital line pairs
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].startsWith('1 ') && (i + 1 < lines.length) && lines[i+1].startsWith('2 ')) {
+                    let satName = `SAT-${lines[i].substring(2, 7).trim()}`;
+                    if (i > 0 && !lines[i-1].startsWith('1 ') && !lines[i-1].startsWith('2 ')) {
+                        satName = lines[i-1];
+                    }
 
-                if (!line1 || !line2 || !line1.startsWith('1 ') || !line2.startsWith('2 ')) continue;
+                    const line1 = lines[i];
+                    const line2 = lines[i+1];
 
-                try {
-                    const satrec = satellite.twoline2satrec(line1, line2);
-                    const noradId = line1.substring(2, 7).trim();
+                    try {
+                        const satrec = satellite.twoline2satrec(line1, line2);
+                        if (satrec && !isNaN(satrec.inclo)) {
+                            const noradId = line1.substring(2, 7).trim();
+                            parsedSats.push({
+                                name: satName,
+                                noradId: noradId,
+                                satrec: satrec,
+                                positionVector: new THREE.Vector3()
+                            });
+                        }
+                    } catch (e) {}
+                }
+            }
 
-                    activeSatellites.push({
-                        name: name,
-                        noradId: noradId,
-                        satrec: satrec,
-                        positionVector: new THREE.Vector3()
-                    });
+            activeSatellites = parsedSats;
+            applySearchFilter();
+        }
 
-                    positions.push(0, 0, 0);
-                    colors.push(0.34, 0.65, 1.0);
-                } catch (e) {}
+        function applySearchFilter() {
+            const query = searchQuery.toLowerCase().trim();
+            if (!query) {
+                filteredSatellites = activeSatellites;
+            } else {
+                filteredSatellites = activeSatellites.filter(sat => 
+                    sat.name.toLowerCase().includes(query) || 
+                    sat.noradId.toLowerCase().includes(query)
+                );
+            }
+            rebuildSatellitePointsMesh();
+        }
+
+        function rebuildSatellitePointsMesh() {
+            if (satellitePoints) scene.remove(satellitePoints);
+
+            const positions = new Float32Array(filteredSatellites.length * 3);
+            const colors = new Float32Array(filteredSatellites.length * 3);
+
+            for (let i = 0; i < filteredSatellites.length; i++) {
+                positions[i * 3] = 0;
+                positions[i * 3 + 1] = 0;
+                positions[i * 3 + 2] = 0;
+
+                colors[i * 3] = 0.34;
+                colors[i * 3 + 1] = 0.65;
+                colors[i * 3 + 2] = 1.0;
             }
 
             satelliteGeometry = new THREE.BufferGeometry();
-            satelliteGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            satelliteGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            satelliteGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            satelliteGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
             satelliteMaterial = new THREE.PointsMaterial({
                 size: 0.18,
@@ -688,7 +776,7 @@ HUBBLE ST
         }
 
         function updatePositions() {
-            if (!activeSatellites.length || !satelliteGeometry) return;
+            if (!filteredSatellites.length || !satelliteGeometry) return;
 
             const now = new Date(Date.now() + simulationOffsetMs);
             const gmst = satellite.gstime(now);
@@ -696,15 +784,14 @@ HUBBLE ST
 
             const overheadSats = [];
 
-            for (let i = 0; i < activeSatellites.length; i++) {
-                const sat = activeSatellites[i];
+            for (let i = 0; i < filteredSatellites.length; i++) {
+                const sat = filteredSatellites[i];
                 const positionAndVelocity = satellite.propagate(sat.satrec, now);
                 const positionEci = positionAndVelocity.position;
 
                 if (positionEci && typeof positionEci !== 'boolean') {
                     const geodetic = satellite.eciToGeodetic(positionEci, gmst);
                     
-                    // Convert to 3D Map Coordinates (Radius ~6.371 + altitude)
                     const rad = 6.371 + (geodetic.height / 1000);
                     const lat = geodetic.latitude;
                     const lon = geodetic.longitude;
@@ -718,7 +805,7 @@ HUBBLE ST
                     positions[i * 3 + 2] = z;
                     sat.positionVector.set(x, y, z);
 
-                    // Sky Radar & Horizon Computation
+                    // Calculate Look Angles relative to Ground Observer
                     const positionEcf = satellite.eciToEcf(positionEci, gmst);
                     const lookAngles = satellite.ecfToLookAngles(observerGd, positionEcf);
 
@@ -762,7 +849,7 @@ HUBBLE ST
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Radar rings
+            // Polar Grid Rings
             ctx.strokeStyle = '#30363d';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -771,7 +858,7 @@ HUBBLE ST
             ctx.arc(radius, radius, radius * 0.33, 0, 2 * Math.PI);
             ctx.stroke();
 
-            // Blips
+            // Polar Satellite Blips
             overheadSats.forEach(item => {
                 const r = radius * (1 - (item.elevation / 90));
                 const theta = (item.azimuth - 90) * (Math.PI / 180);
@@ -795,10 +882,10 @@ HUBBLE ST
             document.getElementById('prov-tle-age').innerText = `${prov.medianAgeHours} hrs`;
 
             const statusEl = document.getElementById('prov-status');
-            if (prov.status.includes('FRESH')) statusEl.className = 'badge badge-fresh';
-            else if (prov.status.includes('STALE')) statusEl.className = 'badge badge-stale';
-            else if (prov.status.includes('CACHED')) statusEl.className = 'badge badge-cached';
-            else statusEl.className = 'badge badge-offline';
+            if (prov.status === 'FRESH (LIVE)') statusEl.className = 'badge badge-fresh';
+            else if (prov.status === 'STALE (LIVE)') statusEl.className = 'badge badge-stale';
+            else if (prov.status === 'OFFLINE — CACHED DATA') statusEl.className = 'badge badge-cached';
+            else statusEl.className = 'badge badge-offline'; // OFFLINE — SAMPLE DATA / FETCH FAILED
         }
 
         function updateDetailPanel(sat, now, gmst) {
@@ -832,7 +919,7 @@ HUBBLE ST
             const points = [];
             const now = Date.now() + simulationOffsetMs;
             
-            // Step forward 90 minutes for full orbit track
+            // Calculate 90-minute projected orbit path
             for (let t = 0; t <= 90; t += 2) {
                 const futureTime = new Date(now + t * 60000);
                 const gmst = satellite.gstime(futureTime);
@@ -863,7 +950,7 @@ HUBBLE ST
         }
 
         function initEventListeners() {
-            // Category Buttons
+            // Category Tab Buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -872,34 +959,51 @@ HUBBLE ST
                 });
             });
 
+            // Search Bar Filter Event
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                applySearchFilter();
+            });
+
             // Force Refresh Button
             document.getElementById('force-refresh-btn').addEventListener('click', () => {
                 loadSatelliteData(currentGroup, true);
             });
 
-            // Close Detail Modal
+            // Close Detail Card
             document.getElementById('close-detail').addEventListener('click', () => {
                 document.getElementById('detail-panel').style.display = 'none';
                 selectedSatellite = null;
                 if (orbitPathLine) scene.remove(orbitPathLine);
             });
 
-            // Time Machine Controls
+            // Time Machine - Slider Control
             const slider = document.getElementById('time-slider');
             slider.addEventListener('input', (e) => {
                 simulationOffsetMs = parseInt(e.target.value, 10) * 1000;
                 document.getElementById('time-display').innerText = `${e.target.value}s`;
             });
 
+            // Time Machine - Reset Button
             document.getElementById('time-reset').addEventListener('click', () => {
                 simulationOffsetMs = 0;
                 slider.value = 0;
                 document.getElementById('time-display').innerText = 'LIVE';
             });
 
+            // Time Machine - Pause/Play Toggle
             document.getElementById('time-pause').addEventListener('click', () => {
                 isPaused = !isPaused;
                 document.getElementById('time-pause').innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+            });
+
+            // Time Machine - Speed Multiplier Buttons (1x, 10x, 60x, 300x, 3600x)
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active-speed'));
+                    e.target.classList.add('active-speed');
+                    timeMultiplier = parseInt(e.target.dataset.speed, 10);
+                });
             });
         }
 
@@ -919,11 +1023,22 @@ HUBBLE ST
         function animate() {
             requestAnimationFrame(animate);
 
+            const now = Date.now();
+            const deltaMs = now - lastFrameTimestamp;
+            lastFrameTimestamp = now;
+
+            // Advance simulation offset if playing with a speed multiplier
+            if (!isPaused && timeMultiplier !== 1) {
+                simulationOffsetMs += deltaMs * (timeMultiplier - 1);
+                document.getElementById('time-slider').value = Math.round(simulationOffsetMs / 1000);
+                document.getElementById('time-display').innerText = `${Math.round(simulationOffsetMs / 1000)}s`;
+            }
+
             if (!isPaused) {
                 updatePositions();
             }
 
-            earthMesh.rotation.y += 0.0001; // Slow background spin
+            earthMesh.rotation.y += 0.0001; // Earth rotation background step
             controls.update();
             renderer.render(scene, camera);
         }
