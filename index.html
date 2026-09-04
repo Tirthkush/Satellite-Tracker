@@ -236,7 +236,18 @@ const DataService={
   clearTimeout(this.refreshTimers.get(category));
   const next=this.cache.get(category)?.provenance?.nextRefreshUtc;
   const wait=next?Math.max(30000,new Date(next).getTime()-Date.now()):this.AUTO_REFRESH_MS;
-  this.refreshTimers.set(category,setTimeout(()=>{loadSatelliteData(category,true)},wait));
+  this.refreshTimers.set(category,setTimeout(async()=>{
+   try{
+    const dataset=await this.fetchFeed(category,{forceRefresh:true});
+    if(currentGroup===category){
+     updateProvenanceUI(dataset.provenance);
+     parseAndBuildSatellites(dataset.records);
+    }
+   }catch(error){
+    console.warn(`Scheduled refresh failed for ${category}:`,error);
+    if(currentGroup===category)announce(`Scheduled refresh failed for ${category}. Continuing with the last accepted catalog.`,true);
+   }
+  },wait));
  }
 };
 
@@ -286,9 +297,73 @@ function requestObserverLocation(){
  if(!navigator.geolocation){updateObserverStatus('GPS unavailable');announce('This browser does not support location access.',true);return}
  updateObserverStatus('Requesting GPS…');navigator.geolocation.getCurrentPosition(pos=>{observerGd.latitude=pos.coords.latitude*Math.PI/180;observerGd.longitude=pos.coords.longitude*Math.PI/180;observerGd.height=(pos.coords.altitude||0)/1000;updateObserverMarker();const latitude=pos.coords.latitude.toFixed(4),longitude=pos.coords.longitude.toFixed(4);updateObserverStatus(`${latitude}°, ${longitude}°`);announce(`Your location is pinned at latitude ${latitude} degrees, longitude ${longitude} degrees.`);lastPropagationAt=0;updatePositions()},()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Horizon calculations use the default observer location.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000})}
 
+function clearSelection(){
+ selectedSatellite=null;
+ const panel=document.getElementById('detail-panel');
+ if(panel)panel.style.display='none';
+ if(orbitPathLine){
+  scene.remove(orbitPathLine);
+  orbitPathLine.geometry.dispose();
+  orbitPathLine.material.dispose();
+  orbitPathLine=null;
+ }
+}
+
+function clearCatalogView(){
+ activeSatellites=[];
+ filteredSatellites=[];
+ lastOverheadCount=null;
+ lastPropagationAt=0;
+ clearSelection();
+ if(satellitePoints){
+  scene.remove(satellitePoints);
+  satelliteGeometry?.dispose();
+  satelliteMaterial?.dispose();
+  satellitePoints=null;
+  satelliteGeometry=null;
+  satelliteMaterial=null;
+ }
+ const overhead=document.getElementById('overhead-list');
+ if(overhead)overhead.innerHTML='<div class="empty-note">Loading catalog…</div>';
+ updateCatalogScope();
+}
+
 async function loadSatelliteData(groupCategory,forceRefresh=false){
- if(!DataService.ENDPOINTS[groupCategory])groupCategory='stations';currentGroup=groupCategory;showLoading(true,`Fetching ${groupCategory.toUpperCase()} data...`);
- try{const dataset=await DataService.fetchFeed(groupCategory,{forceRefresh});updateProvenanceUI(dataset.provenance);parseAndBuildSatellites(dataset.records);}catch(err){console.error(err);updateProvenanceUI({source:'None',feed:groupCategory,status:'FETCH FAILED',fetchTimeUtc:new Date().toISOString(),objectCount:0,oldestEpoch:'N/A',newestEpoch:'N/A',medianAgeHours:0,confidence:'DO NOT USE'});}finally{showLoading(false);}
+ if(!DataService.ENDPOINTS[groupCategory])groupCategory='stations';
+ const switching=groupCategory!==currentGroup;
+ currentGroup=groupCategory;
+ if(switching||forceRefresh)clearCatalogView();
+ if(switching){
+  searchQuery='';
+  const search=document.getElementById('search-input');
+  if(search)search.value='';
+ }
+ showLoading(true,`Fetching ${groupCategory.toUpperCase()} data…`);
+ try{
+  const dataset=await DataService.fetchFeed(groupCategory,{forceRefresh});
+  if(groupCategory!==currentGroup)return;
+  updateProvenanceUI(dataset.provenance);
+  parseAndBuildSatellites(dataset.records);
+ }catch(err){
+  console.error(err);
+  if(groupCategory===currentGroup){
+   updateProvenanceUI({
+    source:'None',
+    feed:groupCategory,
+    status:'FETCH FAILED',
+    fetchTimeUtc:new Date().toISOString(),
+    objectCount:0,
+    oldestEpoch:'N/A',
+    newestEpoch:'N/A',
+    medianAgeHours:0,
+    worstAgeHours:0,
+    confidence:'DO NOT USE',
+    fallbackReason:err?.message||'Unknown error'
+   });
+  }
+ }finally{
+  if(groupCategory===currentGroup)showLoading(false);
+ }
 }
 
 function objectTypeFor(group){
@@ -320,7 +395,7 @@ function applySearchFilter(){
   if(altMin!==null&&s.lastAltitudeKm!==null&&s.lastAltitudeKm<altMin)return false;
   if(altMax!==null&&s.lastAltitudeKm!==null&&s.lastAltitudeKm>altMax)return false;
   if(incMin!==null&&s.inclinationDeg<incMin)return false;if(incMax!==null&&s.inclinationDeg>incMax)return false;
-  if(!allowed.has(confidenceForAge(Math.max(0,(Date.now()-s.epochMs)/3600000)).key))return false;
+  if(!allowed.has(confidenceForAge(Math.max(0,(currentSimulationDate().getTime()-s.epochMs)/3600000)).key))return false;
   if((above||elevation>0)&&s.lastElevationDeg!==null&&s.lastElevationDeg<Math.max(0,elevation))return false;
   return true;
  });
@@ -393,7 +468,7 @@ function updateProvenanceUI(prov){
 
 function updateDetailPanel(sat,now,gmst){
  let pv;try{pv=satellite.propagate(sat.satrec,now)}catch(e){return}const pos=pv?.position,velEci=pv?.velocity;if(!pos||typeof pos==='boolean'||!velEci)return;
- const geo=satellite.eciToGeodetic(pos,gmst),age=Math.max(0,(Date.now()-sat.epochMs)/3600000),band=confidenceForAge(age);
+ const geo=satellite.eciToGeodetic(pos,gmst),age=Math.max(0,(now.getTime()-sat.epochMs)/3600000),band=confidenceForAge(age);
  document.getElementById('sat-name').innerText=sat.name;document.getElementById('sat-norad').innerText=sat.noradId;document.getElementById('sat-type').innerText=`${sat.objectType} · ${sat.missionClass}`;document.getElementById('sat-propagated-at').innerText=formatUtc(now);
  const conf=document.getElementById('sat-confidence');conf.innerText=`${band.key} (${band.description})`;conf.className=band.className;
  document.getElementById('sat-lat').innerText=(geo.latitude*180/Math.PI).toFixed(2)+'°';document.getElementById('sat-lng').innerText=(geo.longitude*180/Math.PI).toFixed(2)+'°';document.getElementById('sat-alt').innerText=geo.height.toFixed(1)+' km';document.getElementById('sat-vel').innerText=Math.sqrt(velEci.x**2+velEci.y**2+velEci.z**2).toFixed(2)+' km/s';
@@ -423,13 +498,13 @@ function initEventListeners(){
  document.getElementById('clear-filters').addEventListener('click',()=>{document.querySelectorAll('#filters-panel input[type="number"]').forEach(input=>input.value=input.id==='filter-elevation'?'0':'');document.getElementById('filter-above').checked=false;document.querySelectorAll('.confidence-filter').forEach(input=>input.checked=true);applySearchFilter();lastPropagationAt=0;updatePositions();announce('Filters cleared.');});
  document.getElementById('close-detail').addEventListener('click',()=>{document.getElementById('detail-panel').style.display='none';selectedSatellite=null;if(orbitPathLine){scene.remove(orbitPathLine);orbitPathLine.geometry.dispose();orbitPathLine.material.dispose();orbitPathLine=null}document.getElementById('search-input').focus();announce('Satellite details closed.')});
  const slider=document.getElementById('time-slider');slider.addEventListener('input',e=>{simulationOffsetMs=parseInt(e.target.value,10)*1000;document.getElementById('time-display').innerText=`${e.target.value}s`;updateTargetUtc();if(selectedSatellite)updatePositions()});
- document.getElementById('time-reset').addEventListener('click',()=>{simulationOffsetMs=0;slider.value=0;document.getElementById('time-display').innerText='LIVE';updateTargetUtc()});
+ document.getElementById('time-reset').addEventListener('click',()=>{simulationOffsetMs=0;slider.value=0;document.getElementById('time-display').innerText='LIVE';lastPropagationAt=0;updateTargetUtc();updatePositions()});
  document.getElementById('time-pause').addEventListener('click',e=>{isPaused=!isPaused;e.currentTarget.innerHTML=isPaused?'<i class="fas fa-play"></i>':'<i class="fas fa-pause"></i>';e.currentTarget.setAttribute('aria-label',isPaused?'Resume simulation':'Pause simulation');announce(isPaused?'Simulation paused.':'Simulation resumed.')});
  document.querySelectorAll('.speed-btn').forEach(btn=>btn.addEventListener('click',e=>{document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active-speed'));e.currentTarget.classList.add('active-speed');timeMultiplier=parseInt(e.currentTarget.dataset.speed,10)}));
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selectedSatellite){document.getElementById('close-detail').click()}});
 }
 
-function exportRows(){return filteredSatellites.map(s=>({name:s.name,noradId:s.noradId,objectType:s.objectType,missionClass:s.missionClass,latitude:s.lastLatitudeDeg,longitude:s.lastLongitudeDeg,altitudeKm:s.lastAltitudeKm,velocityKms:s.lastVelocityKms,azimuthDeg:s.lastAzimuthDeg,elevationDeg:s.lastElevationDeg,inclinationDeg:s.inclinationDeg,tleEpoch:new Date(s.epochMs).toISOString(),tleAgeHours:Number(Math.max(0,(Date.now()-s.epochMs)/3600000).toFixed(1)),confidence:confidenceForAge(Math.max(0,(Date.now()-s.epochMs)/3600000)).key}));}
+function exportRows(){return filteredSatellites.map(s=>({name:s.name,noradId:s.noradId,objectType:s.objectType,missionClass:s.missionClass,latitude:s.lastLatitudeDeg,longitude:s.lastLongitudeDeg,altitudeKm:s.lastAltitudeKm,velocityKms:s.lastVelocityKms,azimuthDeg:s.lastAzimuthDeg,elevationDeg:s.lastElevationDeg,inclinationDeg:s.inclinationDeg,tleEpoch:new Date(s.epochMs).toISOString(),tleAgeHours:Number(Math.max(0,(currentSimulationDate().getTime()-s.epochMs)/3600000).toFixed(1)),confidence:confidenceForAge(Math.max(0,(currentSimulationDate().getTime()-s.epochMs)/3600000)).key}));}
 function csvCell(value){const text=value===null||value===undefined?'':String(value);return /[",\n]/.test(text)?`"${text.replace(/"/g,'""')}"`:text}
 function downloadFile(filename,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function exportCatalog(format){
