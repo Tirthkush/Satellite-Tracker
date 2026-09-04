@@ -1,46 +1,50 @@
-# 🛰️ Overhead - Live Satellite Tracker
+# 🛰️ SatTracker 3D — Live Satellite Tracker
 
-A real-time, interactive 3D satellite tracker that shows which satellites (and tracked debris) are currently above your location, right in the browser no installs, no backend.
+A real-time interactive 3D satellite tracking application that visualizes publicly available orbital data and continuously calculates satellite positions using SGP4/SDP4 propagation.
 
-**🌐 Live site:** https://satellite-tracker-eight.vercel.app/
+🌐 **Live site:** https://satellite-tracker-eight.vercel.app/
 
-## Features
+> **Important:** Satellite positions shown by this application are calculated predictions from orbital elements. They are not live telemetry or direct observations.
 
-- **Live location** uses your browser's geolocation to find satellites currently overhead (falls back to a default location if permission is denied).
-- **Interactive 3D globe** drag to rotate, scroll/pinch to zoom, double-click a satellite to fly in close.
-- **Real 3D satellite models**  each satellite is rendered as an actual 3D model (body, solar panels, antenna), color-coded by status:
-  - 🟢 Cyan - overhead right now
-  - 🟠 Amber - below your horizon
-  - 🟡 Bright amber - currently selected
-  - 🔴 Red - tracked space debris
-- **Sky radar** a polar (azimuth/elevation) plot showing exactly what's overhead, like a real tracking console.
-- **Full technical detail on click** NORAD ID, international designator, orbital elements (inclination, eccentricity, RAAN, argument of perigee, mean anomaly, mean motion, period, semi-major axis, perigee/apogee altitude), TLE epoch, and the raw two-line element set.
-- **Time machine**  rewind or fast-forward up to 72 hours to see where satellites were/will be, with the sun's terminator line updating to match.
-- **Live data**  pulls real orbital data (TLEs) from [CelesTrak](https://celestrak.org), including active satellites and known debris clouds (Cosmos-2251, Iridium-33 collision debris). Falls back to bundled sample data if the live feed is unreachable.
-- **Realistic globe**  real Earth day texture, cloud layer, atmosphere glow, starfield, and sun-lit day/night shading.
+---
 
-## Tech stack
+## 🚀 Features
 
-- Plain HTML/CSS/JavaScript no build step, no framework
-- [Three.js](https://threejs.org) (r128) for the 3D globe and satellite models
-- [satellite.js](https://github.com/shashwatak/satellite-js) for SGP4 orbit propagation
-- Orbital & debris data from [CelesTrak](https://celestrak.org)
+### 🌍 Interactive 3D Globe
 
-## Running locally
+- Interactive 3D Earth visualization using Three.js
+- Rotate, zoom and explore the globe
+- Satellite objects displayed around Earth
+- Click visible satellites to inspect their propagated orbital information
+- Earth day/night visualization and starfield
 
-Just open `index.html` in any modern browser. For live data to load reliably, serve it over `https://` (e.g. via Vercel) rather than opening the file directly — some browsers restrict live data fetches from local `file://` pages.
+### 🛰️ Multiple Satellite Catalogs
 
-## Deploying
+The tracker supports multiple CelesTrak catalogs:
 
-This is a static site — deploy with the [Vercel CLI](https://vercel.com/docs/cli):
+- **Stations** — Space stations and related tracked objects
+- **Starlink** — Starlink satellite constellation
+- **Brightest** — Visually prominent satellite objects
+- **Active** — Active satellite catalog
+- **FY-1C Debris** — Fengyun-1C debris catalog
 
-```bash
-npx vercel --prod
-```
+Catalogs are loaded through the application's backend rather than directly from the browser.
 
-Or connect this repo to a Vercel project for automatic deployments on every commit.
+### 📡 Live Orbital Data Pipeline
 
-## Data & accuracy notes
+The application uses the following architecture:
 
-- Satellite positions are computed via SGP4 propagation of publicly available TLE (Two-Line Element) data. Accuracy degrades the further you rewind/fast-forward from the TLE's epoch — the app shows the data age in each satellite's detail panel.
-- Purpose descriptions are heuristic (based on satellite name patterns), not an official database.
+```text
+CelesTrak GP API
+       ↓
+Vercel Serverless API
+       ↓
+Catalog validation & cache
+       ↓
+Browser
+       ↓
+satellite.js
+       ↓
+SGP4 / SDP4 propagation
+       ↓
+3D satellite visualization
