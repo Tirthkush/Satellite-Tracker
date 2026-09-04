@@ -254,7 +254,7 @@ const DataService={
 
 
 let scene,camera,renderer,controls,earthMesh,atmosphereMesh,raycaster,observerMarker;
-let satellitePoints,satelliteGeometry,satelliteMaterial;
+let satellitePoints,satelliteGeometry,satelliteMaterial,debrisPoints,debrisGeometry,debrisMaterial;
 let activeSatellites=[],filteredSatellites=[],selectedSatellite=null,orbitPathLine=null;
 let observerGd={latitude:0,longitude:0,height:0};
 let simulationOffsetMs=0,timeMultiplier=1,isPaused=false,lastFrameTimestamp=Date.now(),currentGroup='stations',searchQuery='',lastPropagationAt=0,lastAnnouncedStatus='',lastOverheadCount=null;
@@ -274,7 +274,7 @@ function initScene(){
  const container=document.getElementById('webgl-container');scene=new THREE.Scene();
  camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);camera.position.set(0,0,25);
  renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));container.appendChild(renderer.domElement);
- raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.22;renderer.domElement.addEventListener('click',selectSatelliteFromGlobe);
+ raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.48;renderer.domElement.addEventListener('click',selectSatelliteFromGlobe);
  controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.05;controls.minDistance=8;controls.maxDistance=80;
  scene.background=new THREE.Color(0x02040b);scene.add(new THREE.AmbientLight(0x7896ba,1.35));const sun=new THREE.DirectionalLight(0xffffff,2.3);sun.position.set(8,4,7);scene.add(sun);addStarfield();
  const R=6.371,earthMaterial=new THREE.MeshPhongMaterial({color:0x5f8bad,emissive:0x0d2336,specular:0x9bb7c8,shininess:14});earthMesh=new THREE.Mesh(new THREE.SphereGeometry(R,96,96),earthMaterial);scene.add(earthMesh);
@@ -285,8 +285,33 @@ function initScene(){
 
 function addStarfield(){const count=1800,positions=new Float32Array(count*3);for(let i=0;i<count;i++){const radius=120+Math.random()*100,theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1);positions[i*3]=radius*Math.sin(phi)*Math.cos(theta);positions[i*3+1]=radius*Math.cos(phi);positions[i*3+2]=radius*Math.sin(phi)*Math.sin(theta)}const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));scene.add(new THREE.Points(geometry,new THREE.PointsMaterial({color:0xc8dcff,size:.38,sizeAttenuation:true,transparent:true,opacity:.85})))}
 
-function selectSatelliteFromGlobe(event){if(!satellitePoints||!filteredSatellites.length)return;const rect=renderer.domElement.getBoundingClientRect(),pointer=new THREE.Vector2(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(satellitePoints,false)[0];if(hit&&filteredSatellites[hit.index])selectSatelliteByNorad(filteredSatellites[hit.index].noradId)}
-
+function selectSatelliteFromGlobe(event){
+ if((!satellitePoints&&!debrisPoints)||!filteredSatellites.length)return;
+ const rect=renderer.domElement.getBoundingClientRect();
+ const pointer=new THREE.Vector2(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);
+ raycaster.setFromCamera(pointer,camera);
+ raycaster.params.Points.threshold=.52;
+ const objects=[satellitePoints,debrisPoints].filter(Boolean),hits=raycaster.intersectObjects(objects,false);
+ if(hits.length){
+  const layer=hits[0].object,localIndex=hits[0].index,globalIndex=layer.userData.satIndices?.[localIndex];
+  if(Number.isInteger(globalIndex)&&filteredSatellites[globalIndex]){
+   selectSatelliteByNorad(filteredSatellites[globalIndex].noradId);return;
+  }
+ }
+ // Screen-space fallback keeps small catalog objects easy to select.
+ let nearestIndex=-1,nearestPx=20;
+ const projected=new THREE.Vector3();
+ for(let i=0;i<filteredSatellites.length;i++){
+  const sat=filteredSatellites[i],p=sat.positionVector;
+  if(!p||!Number.isFinite(p.x))continue;
+  projected.copy(p).project(camera);
+  if(projected.z<-1||projected.z>1)continue;
+  const px=rect.left+(projected.x+1)*0.5*rect.width,py=rect.top+(1-projected.y)*0.5*rect.height;
+  const dist=Math.hypot(event.clientX-px,event.clientY-py);
+  if(dist<nearestPx){nearestPx=dist;nearestIndex=i;}
+ }
+ if(nearestIndex>=0)selectSatelliteByNorad(filteredSatellites[nearestIndex].noradId);
+}
 function createObserverMarker(){observerMarker=new THREE.Group();const pin=new THREE.Mesh(new THREE.SphereGeometry(.14,20,20),new THREE.MeshBasicMaterial({color:0xffd33d}));const halo=new THREE.Mesh(new THREE.SphereGeometry(.23,20,20),new THREE.MeshBasicMaterial({color:0xffd33d,transparent:true,opacity:.18}));observerMarker.add(pin,halo);scene.add(observerMarker);updateObserverMarker()}
 function updateObserverMarker(){if(!observerMarker)return;const lat=observerGd.latitude,lon=observerGd.longitude,r=6.62;observerMarker.position.set(r*Math.cos(lat)*Math.cos(lon),r*Math.sin(lat),-r*Math.cos(lat)*Math.sin(lon))}
 function updateObserverStatus(text){const el=document.getElementById('observer-status');if(el)el.innerText=text}
@@ -316,14 +341,7 @@ function clearCatalogView(){
  lastOverheadCount=null;
  lastPropagationAt=0;
  clearSelection();
- if(satellitePoints){
-  scene.remove(satellitePoints);
-  satelliteGeometry?.dispose();
-  satelliteMaterial?.dispose();
-  satellitePoints=null;
-  satelliteGeometry=null;
-  satelliteMaterial=null;
- }
+ disposePointLayers();
  const overhead=document.getElementById('overhead-list');
  if(overhead)overhead.innerHTML='<div class="empty-note">Loading catalog…</div>';
  updateCatalogScope();
@@ -383,7 +401,7 @@ function missionClassFor(record){
 }
 
 function parseAndBuildSatellites(records){
- if(satellitePoints){scene.remove(satellitePoints);satelliteGeometry?.dispose();satelliteMaterial?.dispose();}
+ disposePointLayers();
  activeSatellites=records.map(r=>({...r,positionVector:new THREE.Vector3(),objectType:objectTypeFor(r.group),missionClass:missionClassFor(r),inclinationDeg:r.satrec.inclo*180/Math.PI,lastLatitudeDeg:null,lastLongitudeDeg:null,lastAltitudeKm:null,lastElevationDeg:null,lastAzimuthDeg:null,lastVelocityKms:null}));
  updateCatalogScope();applySearchFilter();
 }
@@ -400,7 +418,7 @@ function applySearchFilter(){
   if((above||elevation>0)&&s.lastElevationDeg!==null&&s.lastElevationDeg<Math.max(0,elevation))return false;
   return true;
  });
- const changed=next.length!==filteredSatellites.length||next.some((s,i)=>s!==filteredSatellites[i]);filteredSatellites=next;if(selectedSatellite&&!filteredSatellites.some(s=>s.noradId===selectedSatellite.noradId)){clearSelection()}if(changed||!satellitePoints)rebuildSatellitePointsMesh();updateSearchResults(q);
+ const changed=next.length!==filteredSatellites.length||next.some((s,i)=>s!==filteredSatellites[i]);filteredSatellites=next;if(selectedSatellite&&!filteredSatellites.some(s=>s.noradId===selectedSatellite.noradId)){clearSelection()}if(changed||(!satellitePoints&&!debrisPoints))rebuildSatellitePointsMesh();updateSearchResults(q);
 }
 function numberFrom(id){const el=document.getElementById(id);if(!el||el.value.trim()==='')return null;const n=Number(el.value);return Number.isFinite(n)?n:null}
 
@@ -413,13 +431,69 @@ function updateSearchResults(query){
 
 function updateCatalogScope(){const el=document.getElementById('catalog-scope');if(el)el.innerHTML=`<strong>CATALOG SCOPE</strong><br>Feed: ${escapeHtml(currentGroup)} · ${activeSatellites.length.toLocaleString()} validated objects. This view contains only the selected backend-served CelesTrak catalog, not every object in orbit.`}
 
-function rebuildSatellitePointsMesh(){
- if(satellitePoints){scene.remove(satellitePoints);satelliteGeometry?.dispose();satelliteMaterial?.dispose();}
- const positions=new Float32Array(filteredSatellites.length*3),colors=new Float32Array(filteredSatellites.length*3);for(let i=0;i<filteredSatellites.length;i++){const isSelected=selectedSatellite&&filteredSatellites[i].noradId===selectedSatellite.noradId;colors[i*3]=isSelected?1:.34;colors[i*3+1]=isSelected?.83:.65;colors[i*3+2]=isSelected?.18:1}
- satelliteGeometry=new THREE.BufferGeometry();satelliteGeometry.setAttribute('position',new THREE.BufferAttribute(positions,3));satelliteGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
- satelliteMaterial=new THREE.PointsMaterial({size:.23,vertexColors:true,transparent:true,opacity:.95});satellitePoints=new THREE.Points(satelliteGeometry,satelliteMaterial);scene.add(satellitePoints);
+function makeMarkerTexture(kind){
+ const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d');x.clearRect(0,0,64,64);x.translate(32,32);
+ if(kind==='satellite'){
+  // Compact spacecraft silhouette: body + two solar panels + antenna mast.
+  x.fillStyle='#ffffff';x.fillRect(-7,-10,14,20);x.fillRect(-26,-6,15,12);x.fillRect(11,-6,15,12);
+  x.fillStyle='#ffffff';x.fillRect(-2,-24,4,14);x.beginPath();x.arc(0,-27,3,0,Math.PI*2);x.fill();
+  x.strokeStyle='#ffffff';x.lineWidth=3;x.beginPath();x.moveTo(-11,-3);x.lineTo(-26,-3);x.moveTo(11,-3);x.lineTo(26,-3);x.stroke();
+ }else{
+  // Irregular rock/fragment silhouette for debris.
+  x.fillStyle='#ffffff';x.beginPath();x.moveTo(-22,-8);x.lineTo(-11,-22);x.lineTo(5,-19);x.lineTo(22,-8);x.lineTo(18,10);x.lineTo(7,21);x.lineTo(-12,17);x.lineTo(-23,5);x.closePath();x.fill();
+  x.fillStyle='rgba(0,0,0,.22)';x.beginPath();x.arc(-8,-7,5,0,Math.PI*2);x.arc(8,5,4,0,Math.PI*2);x.arc(1,-12,3,0,Math.PI*2);x.fill();
+ }
+ const tex=new THREE.CanvasTexture(c);tex.needsUpdate=true;return tex;
 }
 
+function disposePointLayers(){
+ [
+  ['satellitePoints','satelliteGeometry','satelliteMaterial'],
+  ['debrisPoints','debrisGeometry','debrisMaterial']
+ ].forEach(([po,ge,ma])=>{
+  if(po==='satellitePoints' && satellitePoints)scene.remove(satellitePoints);
+  if(po==='debrisPoints' && debrisPoints)scene.remove(debrisPoints);
+ });
+ if(satelliteGeometry)satelliteGeometry.dispose();
+ if(debrisGeometry)debrisGeometry.dispose();
+ if(satelliteMaterial){satelliteMaterial.map?.dispose();satelliteMaterial.dispose();}
+ if(debrisMaterial){debrisMaterial.map?.dispose();debrisMaterial.dispose();}
+ satellitePoints=satelliteGeometry=satelliteMaterial=null;
+ debrisPoints=debrisGeometry=debrisMaterial=null;
+}
+
+function rebuildSatellitePointsMesh(){
+ disposePointLayers();
+ const spacecraft=[],debris=[];
+ filteredSatellites.forEach((sat,i)=>(sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT')?debris:spacecraft).push(i));
+ const buildLayer=(indices,kind)=>{
+  if(!indices.length)return null;
+  const positions=new Float32Array(indices.length*3),colors=new Float32Array(indices.length*3);
+  indices.forEach((globalIndex,i)=>{
+   const sat=filteredSatellites[globalIndex],selected=selectedSatellite&&sat.noradId===selectedSatellite.noradId;
+   positions[i*3]=sat.positionVector.x;positions[i*3+1]=sat.positionVector.y;positions[i*3+2]=sat.positionVector.z;
+   if(selected){colors[i*3]=1;colors[i*3+1]=.83;colors[i*3+2]=.18;}
+   else if(kind==='debris'){colors[i*3]=.62;colors[i*3+1]=.55;colors[i*3+2]=.42;}
+   else{colors[i*3]=.34;colors[i*3+1]=.65;colors[i*3+2]=1;}
+  });
+  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const material=new THREE.PointsMaterial({size:kind==='debris'?.34:.42,vertexColors:true,transparent:true,opacity:.98,sizeAttenuation:true,alphaTest:.12,map:makeMarkerTexture(kind)});
+  const points=new THREE.Points(geometry,material);points.userData.satIndices=indices;scene.add(points);return {points,geometry,material};
+ };
+ const a=buildLayer(spacecraft,'satellite'),d=buildLayer(debris,'debris');
+ if(a){satellitePoints=a.points;satelliteGeometry=a.geometry;satelliteMaterial=a.material;}
+ if(d){debrisPoints=d.points;debrisGeometry=d.geometry;debrisMaterial=d.material;}
+}
+
+function syncPointGeometryPositions(){
+ const sync=(points,geometry)=>{
+  if(!points||!geometry)return;
+  const arr=geometry.attributes.position.array;
+  points.userData.satIndices.forEach((globalIndex,i)=>{const p=filteredSatellites[globalIndex]?.positionVector;if(!p)return;arr[i*3]=p.x;arr[i*3+1]=p.y;arr[i*3+2]=p.z;});
+  geometry.attributes.position.needsUpdate=true;
+ };
+ sync(satellitePoints,satelliteGeometry);sync(debrisPoints,debrisGeometry);
+}
 function currentSimulationDate(){return new Date(Date.now()+simulationOffsetMs)}
 function formatUtc(date){return new Date(date).toISOString()}
 
@@ -437,7 +511,8 @@ function updatePositions(){
   try{const ecf=satellite.eciToEcf(pos,gmst),look=satellite.ecfToLookAngles(observerGd,ecf);sat.lastElevationDeg=look.elevation*180/Math.PI;sat.lastAzimuthDeg=look.azimuth*180/Math.PI}catch(e){sat.lastElevationDeg=null;sat.lastAzimuthDeg=null}
  }
  applySearchFilter();
- if(satelliteGeometry){const positions=satelliteGeometry.attributes.position.array;for(let i=0;i<filteredSatellites.length;i++){const p=filteredSatellites[i].positionVector;positions[i*3]=p.x;positions[i*3+1]=p.y;positions[i*3+2]=p.z;if(filteredSatellites[i].lastElevationDeg>0)overhead.push({sat:filteredSatellites[i],elevation:filteredSatellites[i].lastElevationDeg,azimuth:filteredSatellites[i].lastAzimuthDeg,range:0})}satelliteGeometry.attributes.position.needsUpdate=true}
+ syncPointGeometryPositions();
+ for(const sat of filteredSatellites){if(sat.lastElevationDeg>0)overhead.push({sat,elevation:sat.lastElevationDeg,azimuth:sat.lastAzimuthDeg,range:0});}
  updateOverheadUI(overhead);renderRadar(overhead);if(selectedSatellite)updateDetailPanel(selectedSatellite,now,gmst);
 }
 
