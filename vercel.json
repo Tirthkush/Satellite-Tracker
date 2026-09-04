@@ -1,1 +1,8 @@
-
+{
+  "version": 2,
+  "functions": {
+    "api/catalog/[group].js": {
+      "maxDuration": 30
+    }
+  }
+}
