@@ -26,7 +26,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 .conf-nominal{color:#3fb950}.conf-degraded{color:#d29922}.conf-stale{color:#f0883e}.conf-do-not-use{color:#f85149}
 #disclosure{margin-top:8px;padding-top:8px;border-top:1px solid #21262d;color:#8b949e;font-size:.68rem;line-height:1.45}.disclosure strong{color:#c9d1d9}.utc-clock{font-family:monospace;color:#58a6ff}
 #radar-panel{bottom:15px;right:15px;width:220px;height:240px;text-align:center;box-sizing:border-box;overflow:hidden}#radar-canvas{display:block;background:#010409;border-radius:50%;border:1px solid #30363d;margin:5px auto 0;width:180px;height:180px}#radar-description{margin-top:4px}
-#overhead-panel{bottom:15px;left:15px;width:330px;max-height:270px;display:flex;flex-direction:column}#overhead-list{overflow-y:auto;max-height:195px;margin-top:8px}.sat-item{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #21262d;font-size:.76rem;cursor:pointer}.sat-item:hover{background:rgba(56,139,253,.15)}.empty-note{color:#8b949e;padding:8px 2px;font-size:.75rem}
+#overhead-panel{bottom:15px;left:15px;width:330px;max-height:270px;display:flex;flex-direction:column}#overhead-list{overflow-y:auto;max-height:195px;margin-top:8px}.sat-item{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #21262d;font-size:.76rem;cursor:pointer}.sat-item:hover{background:rgba(56,139,253,.15)}.sat-item.selected-item{background:rgba(255,211,61,.12);outline:1px solid rgba(255,211,61,.45)}.empty-note{color:#8b949e;padding:8px 2px;font-size:.75rem}
 #detail-panel{top:252px;bottom:285px;left:15px;width:340px;display:none;max-height:none;overflow:auto}.close-btn{float:right;cursor:pointer;color:#8b949e}.close-btn:hover{color:#f85149}.detail-kicker{font-size:.66rem;color:#8b949e;letter-spacing:.7px;font-weight:bold;margin-bottom:3px}.detail-title{font-size:1.08rem;color:#58a6ff;margin-bottom:9px}.detail-disclosure{font-size:.68rem;line-height:1.45;color:#8b949e;border:1px solid #30363d;border-radius:5px;padding:7px;margin-bottom:9px}.detail-disclosure strong{color:#c9d1d9}.confidence-line{margin-bottom:8px;font-family:monospace;font-size:.72rem}
 #time-panel{bottom:15px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 16px}.time-btn{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.72rem}.time-btn:hover,.time-btn.active-speed{background:#1f6feb;color:#fff;border-color:#388bfd}
 .detail-list{margin:0}.detail-list .prov-row{align-items:baseline}.detail-list dt{color:#8b949e;white-space:nowrap}.detail-list dd{margin:0;color:#c9d1d9;font-family:monospace;text-align:right;overflow-wrap:anywhere}.close-btn{background:transparent;border:0;font-size:1.25rem}.status-banner{position:absolute;z-index:20;top:15px;left:50%;transform:translateX(-50%);max-width:420px;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;font-size:.76rem;color:#c9d1d9;text-align:center}.status-banner[hidden]{display:none}
@@ -400,7 +400,7 @@ function applySearchFilter(){
   if((above||elevation>0)&&s.lastElevationDeg!==null&&s.lastElevationDeg<Math.max(0,elevation))return false;
   return true;
  });
- const changed=next.length!==filteredSatellites.length||next.some((s,i)=>s!==filteredSatellites[i]);filteredSatellites=next;if(changed||!satellitePoints)rebuildSatellitePointsMesh();updateSearchResults(q);
+ const changed=next.length!==filteredSatellites.length||next.some((s,i)=>s!==filteredSatellites[i]);filteredSatellites=next;if(selectedSatellite&&!filteredSatellites.some(s=>s.noradId===selectedSatellite.noradId)){clearSelection()}if(changed||!satellitePoints)rebuildSatellitePointsMesh();updateSearchResults(q);
 }
 function numberFrom(id){const el=document.getElementById(id);if(!el||el.value.trim()==='')return null;const n=Number(el.value);return Number.isFinite(n)?n:null}
 
@@ -415,7 +415,7 @@ function updateCatalogScope(){const el=document.getElementById('catalog-scope');
 
 function rebuildSatellitePointsMesh(){
  if(satellitePoints){scene.remove(satellitePoints);satelliteGeometry?.dispose();satelliteMaterial?.dispose();}
- const positions=new Float32Array(filteredSatellites.length*3),colors=new Float32Array(filteredSatellites.length*3);for(let i=0;i<filteredSatellites.length;i++){colors[i*3]=.34;colors[i*3+1]=.65;colors[i*3+2]=1}
+ const positions=new Float32Array(filteredSatellites.length*3),colors=new Float32Array(filteredSatellites.length*3);for(let i=0;i<filteredSatellites.length;i++){const isSelected=selectedSatellite&&filteredSatellites[i].noradId===selectedSatellite.noradId;colors[i*3]=isSelected?1:.34;colors[i*3+1]=isSelected?.83:.65;colors[i*3+2]=isSelected?.18:1}
  satelliteGeometry=new THREE.BufferGeometry();satelliteGeometry.setAttribute('position',new THREE.BufferAttribute(positions,3));satelliteGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
  satelliteMaterial=new THREE.PointsMaterial({size:.23,vertexColors:true,transparent:true,opacity:.95});satellitePoints=new THREE.Points(satelliteGeometry,satelliteMaterial);scene.add(satellitePoints);
 }
@@ -445,16 +445,16 @@ function updateOverheadUI(overhead){
  const el=document.getElementById('overhead-list');overhead.sort((a,b)=>b.elevation-a.elevation);
  if(overhead.length!==lastOverheadCount){lastOverheadCount=overhead.length;announce(`${overhead.length} tracked ${overhead.length===1?'object is':'objects are'} currently above the horizon.`)}
  if(!overhead.length){el.innerHTML='<div class="empty-note">No tracked object is currently above the horizon.</div>';return}
- el.innerHTML=overhead.slice(0,10).map(item=>`<div class="sat-item" data-norad="${escapeAttr(item.sat.noradId)}"><span>${escapeHtml(item.sat.name)}</span><span style="color:#3fb950">${item.elevation.toFixed(1)}° El</span></div>`).join('');
- el.querySelectorAll('.sat-item').forEach(row=>row.addEventListener('click',()=>selectSatelliteByNorad(row.dataset.norad)));
+ el.innerHTML=overhead.slice(0,10).map(item=>{const selected=selectedSatellite&&item.sat.noradId===selectedSatellite.noradId;return `<div class="sat-item${selected?' selected-item':''}" data-norad="${escapeAttr(item.sat.noradId)}" aria-selected="${selected}" tabindex="0"><span>${escapeHtml(item.sat.name)}</span><span style="color:#3fb950">${item.elevation.toFixed(1)}° El</span></div>`}).join('');
+ el.querySelectorAll('.sat-item').forEach(row=>{row.addEventListener('click',()=>selectSatelliteByNorad(row.dataset.norad));row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectSatelliteByNorad(row.dataset.norad)}})});
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function escapeAttr(s){return escapeHtml(s)}
-function selectSatelliteByNorad(id){const sat=activeSatellites.find(s=>s.noradId===String(id));if(!sat)return;selectedSatellite=sat;document.getElementById('detail-panel').style.display='block';lastPropagationAt=0;updatePositions();document.getElementById('sat-name').focus();announce(`Selected ${sat.name}, NORAD ${sat.noradId}.`)}
+function selectSatelliteByNorad(id){const sat=activeSatellites.find(s=>s.noradId===String(id));if(!sat)return;selectedSatellite=sat;document.getElementById('detail-panel').style.display='block';rebuildSatellitePointsMesh();lastPropagationAt=0;updatePositions();document.getElementById('sat-name').focus();announce(`Selected ${sat.name}, NORAD ${sat.noradId}.`)}
 
 function renderRadar(overhead){
  const canvas=document.getElementById('radar-canvas'),ctx=canvas.getContext('2d'),r=canvas.width/2;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#30363d';ctx.lineWidth=1;ctx.beginPath();ctx.arc(r,r,r-2,0,2*Math.PI);ctx.arc(r,r,r*.66,0,2*Math.PI);ctx.arc(r,r,r*.33,0,2*Math.PI);ctx.stroke();
- overhead.forEach(item=>{const rr=r*(1-Math.min(90,Math.max(0,item.elevation))/90),theta=(item.azimuth-90)*Math.PI/180,x=r+rr*Math.cos(theta),y=r+rr*Math.sin(theta);ctx.fillStyle='#58a6ff';ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fill()});
+ overhead.forEach(item=>{const rr=r*(1-Math.min(90,Math.max(0,item.elevation))/90),theta=(item.azimuth-90)*Math.PI/180,x=r+rr*Math.cos(theta),y=r+rr*Math.sin(theta),selected=selectedSatellite&&item.sat.noradId===selectedSatellite.noradId;ctx.fillStyle=selected?'#ffd33d':'#58a6ff';ctx.beginPath();ctx.arc(x,y,selected?5:3,0,2*Math.PI);ctx.fill();if(selected){ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke()}});
  const description=overhead.length?overhead.slice(0,10).map(item=>`${item.sat.name}: azimuth ${item.azimuth.toFixed(1)} degrees, elevation ${item.elevation.toFixed(1)} degrees`).join('. '):'No tracked objects are currently above the horizon.';document.getElementById('radar-description').textContent=description;
 }
 
