@@ -1,6 +1,3 @@
-// Vercel Serverless Function
-// Route: /api/catalog/[group]
-
 const GROUPS = new Set([
   "active",
   "stations",
@@ -9,15 +6,17 @@ const GROUPS = new Set([
   "fengyun-1c-debris",
 ]);
 
-const UPSTREAM = "https://celestrak.org/NORAD/elements/gp.php";
+const UPSTREAM =
+  "https://celestrak.org/NORAD/elements/gp.php";
 
 const CACHE = new Map();
 
-const REFRESH_MS = 2 * 60 * 60 * 1000; // 2 hours
+const REFRESH_MS = 2 * 60 * 60 * 1000;
 const TIMEOUT_MS = 15000;
 
+
 // --------------------------------------------------
-// TLE CHECKSUM VALIDATION
+// TLE CHECKSUM
 // --------------------------------------------------
 
 function checksumOk(line) {
@@ -30,7 +29,9 @@ function checksumOk(line) {
 
     if (c >= "0" && c <= "9") {
       sum += Number(c);
-    } else if (c === "-") {
+    }
+
+    if (c === "-") {
       sum += 1;
     }
   }
@@ -38,49 +39,72 @@ function checksumOk(line) {
   return Number(line[68]) === sum % 10;
 }
 
+
 // --------------------------------------------------
-// TLE EPOCH VALIDATION
+// EPOCH VALIDATION
 // --------------------------------------------------
 
 function validEpoch(line1) {
-  if (!line1 || line1.length < 32) return false;
+  if (!line1 || line1.length < 32) {
+    return false;
+  }
 
-  const epoch = line1.slice(18, 32);
-
-  return /^\d{2}\d{3}\.\d{8}$/.test(epoch);
+  return /^\d{2}\d{3}\.\d{8}$/.test(
+    line1.slice(18, 32)
+  );
 }
 
+
 // --------------------------------------------------
-// PARSE TLE DATA
+// PARSE TLE
 // --------------------------------------------------
 
 function parseTLE(text) {
-  const lines = String(text || "")
+  const lines = String(text)
     .split(/\r?\n/)
-    .map((line) => line.trimEnd())
-    .filter((line) => line.trim().length > 0);
+    .map((line) => line.trim())
+    .filter(Boolean);
 
   const records = [];
 
   for (let i = 0; i < lines.length - 1; i++) {
-    const line1 = lines[i].trim();
-    const line2 = lines[i + 1].trim();
+    const line1 = lines[i];
+    const line2 = lines[i + 1];
 
-    if (!line1.startsWith("1 ")) continue;
-    if (!line2.startsWith("2 ")) continue;
+    if (!line1.startsWith("1 ")) {
+      continue;
+    }
 
-    if (!checksumOk(line1)) continue;
-    if (!checksumOk(line2)) continue;
-    if (!validEpoch(line1)) continue;
+    if (!line2.startsWith("2 ")) {
+      continue;
+    }
 
-    const previous = i > 0 ? lines[i - 1].trim() : "";
+    if (!checksumOk(line1)) {
+      continue;
+    }
 
-    const name =
-      previous &&
-      !previous.startsWith("1 ") &&
-      !previous.startsWith("2 ")
-        ? previous
-        : `NORAD ${line1.slice(2, 7).trim()}`;
+    if (!checksumOk(line2)) {
+      continue;
+    }
+
+    if (!validEpoch(line1)) {
+      continue;
+    }
+
+    let name = `NORAD ${line1
+      .slice(2, 7)
+      .trim()}`;
+
+    if (i > 0) {
+      const previous = lines[i - 1];
+
+      if (
+        !previous.startsWith("1 ") &&
+        !previous.startsWith("2 ")
+      ) {
+        name = previous;
+      }
+    }
 
     records.push({
       name,
@@ -94,28 +118,38 @@ function parseTLE(text) {
   return records;
 }
 
+
 // --------------------------------------------------
-// CONVERT RECORDS BACK TO TLE TEXT
+// RECORDS → TLE TEXT
 // --------------------------------------------------
 
 function recordsToTLE(records) {
   return records
     .map(
-      (record) =>
-        `${record.name}\n${record.line1}\n${record.line2}`
+      (sat) =>
+        `${sat.name}\n${sat.line1}\n${sat.line2}`
     )
     .join("\n");
 }
 
+
 // --------------------------------------------------
-// EPOCH → DATE
+// EPOCH DATE
 // --------------------------------------------------
 
 function epochToDate(line1) {
-  const yy = Number(line1.slice(18, 20));
-  const day = Number(line1.slice(20, 32));
+  const yy = Number(
+    line1.slice(18, 20)
+  );
 
-  const year = yy >= 57 ? 1900 + yy : 2000 + yy;
+  const day = Number(
+    line1.slice(20, 32)
+  );
+
+  const year =
+    yy >= 57
+      ? 1900 + yy
+      : 2000 + yy;
 
   return new Date(
     Date.UTC(year, 0, 1) +
@@ -123,21 +157,13 @@ function epochToDate(line1) {
   );
 }
 
+
 // --------------------------------------------------
-// BASIC DATA STATS
+// STATS
 // --------------------------------------------------
 
 function getStats(records) {
-  const now = Date.now();
-
-  const ages = records
-    .map((record) => {
-      const date = epochToDate(record.line1);
-      return (now - date.getTime()) / 3600000;
-    })
-    .filter(Number.isFinite);
-
-  if (!ages.length) {
+  if (!records.length) {
     return {
       oldestEpoch: null,
       newestEpoch: null,
@@ -146,89 +172,103 @@ function getStats(records) {
     };
   }
 
-  const sortedAges = [...ages].sort(
-    (a, b) => a - b
+  const now = Date.now();
+
+  const dates = records
+    .map((sat) =>
+      epochToDate(sat.line1)
+    )
+    .filter((date) =>
+      Number.isFinite(
+        date.getTime()
+      )
+    )
+    .sort(
+      (a, b) =>
+        a.getTime() -
+        b.getTime()
+    );
+
+  const ages = dates.map(
+    (date) =>
+      (now - date.getTime()) /
+      3600000
   );
+
+  const sorted = [
+    ...ages,
+  ].sort((a, b) => a - b);
 
   const middle = Math.floor(
-    sortedAges.length / 2
+    sorted.length / 2
   );
 
-  const medianAge =
-    sortedAges.length % 2
-      ? sortedAges[middle]
+  const median =
+    sorted.length % 2
+      ? sorted[middle]
       : (
-          sortedAges[middle - 1] +
-          sortedAges[middle]
+          sorted[middle - 1] +
+          sorted[middle]
         ) / 2;
 
-  const epochs = records
-    .map((record) => epochToDate(record.line1))
-    .filter(
-      (date) =>
-        !Number.isNaN(date.getTime())
-    )
-    .sort((a, b) => a - b);
-
   return {
-    oldestEpoch: epochs.length
-      ? epochs[0].toISOString()
-      : null,
+    oldestEpoch:
+      dates[0].toISOString(),
 
-    newestEpoch: epochs.length
-      ? epochs[epochs.length - 1].toISOString()
-      : null,
+    newestEpoch:
+      dates[
+        dates.length - 1
+      ].toISOString(),
 
-    medianAgeHours: Number(
-      medianAge.toFixed(2)
-    ),
+    medianAgeHours:
+      Number(
+        median.toFixed(2)
+      ),
 
-    worstAgeHours: Number(
-      Math.max(...ages).toFixed(2)
-    ),
+    worstAgeHours:
+      Number(
+        Math.max(...ages)
+          .toFixed(2)
+      ),
   };
 }
 
+
 // --------------------------------------------------
-// FETCH CELESTRAK
+// CELESTRAK FETCH
 // --------------------------------------------------
 
 async function fetchUpstream(group) {
-  const controller = new AbortController();
+  const controller =
+    new AbortController();
 
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, TIMEOUT_MS);
+  const timeout = setTimeout(
+    () =>
+      controller.abort(),
+    TIMEOUT_MS
+  );
 
   try {
     const url =
-      `${UPSTREAM}?GROUP=${encodeURIComponent(group)}` +
+      `${UPSTREAM}` +
+      `?GROUP=${encodeURIComponent(group)}` +
       `&FORMAT=tle`;
 
-    const response = await fetch(url, {
-      method: "GET",
+    const response =
+      await fetch(url, {
+        method: "GET",
 
-      signal: controller.signal,
+        signal:
+          controller.signal,
 
-      headers: {
-        Accept: "text/plain",
+        headers: {
+          Accept:
+            "text/plain",
 
-        "User-Agent":
-          "SatTracker/Live (+https://github.com/Tirthkush/Satellite-Tracker)",
-      },
-    });
-
-    if (response.status === 403) {
-      throw new Error(
-        "CELESTRAK_HTTP_403"
-      );
-    }
-
-    if (response.status === 429) {
-      throw new Error(
-        "CELESTRAK_HTTP_429"
-      );
-    }
+          "User-Agent":
+            "SatTracker/Phase3",
+        },
+      });
 
     if (!response.ok) {
       throw new Error(
@@ -236,7 +276,8 @@ async function fetchUpstream(group) {
       );
     }
 
-    const text = await response.text();
+    const text =
+      await response.text();
 
     if (
       !text ||
@@ -247,7 +288,8 @@ async function fetchUpstream(group) {
       );
     }
 
-    const records = parseTLE(text);
+    const records =
+      parseTLE(text);
 
     if (!records.length) {
       throw new Error(
@@ -277,14 +319,19 @@ async function fetchUpstream(group) {
   }
 }
 
+
 // --------------------------------------------------
-// JSON RESPONSE
+// RESPONSE
 // --------------------------------------------------
 
-function sendJson(res, status, body) {
+function sendJSON(
+  res,
+  status,
+  data
+) {
   res.setHeader(
     "Content-Type",
-    "application/json; charset=utf-8"
+    "application/json"
   );
 
   res.setHeader(
@@ -302,60 +349,11 @@ function sendJson(res, status, body) {
     "GET, OPTIONS"
   );
 
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type"
-  );
-
   return res
     .status(status)
-    .json(body);
+    .json(data);
 }
 
-// --------------------------------------------------
-// PUBLIC RESPONSE FORMAT
-// --------------------------------------------------
-
-function publicPayload(
-  group,
-  cached,
-  status,
-  extra = {}
-) {
-  return {
-    source:
-      "CelesTrak GP API",
-
-    feed: group,
-
-    status,
-
-    rawText:
-      cached.rawText,
-
-    records:
-      cached.records,
-
-    fetchTimeUtc:
-      cached.fetchedAt,
-
-    upstreamFetchTimeUtc:
-      cached.fetchedAt,
-
-    nextRefreshUtc:
-      new Date(
-        cached.fetchedAtMs +
-          REFRESH_MS
-      ).toISOString(),
-
-    objectCount:
-      cached.records.length,
-
-    ...cached.stats,
-
-    ...extra,
-  };
-}
 
 // --------------------------------------------------
 // VERCEL HANDLER
@@ -365,7 +363,8 @@ export default async function handler(
   req,
   res
 ) {
-  // Handle CORS preflight
+
+  // CORS
   if (req.method === "OPTIONS") {
     res.setHeader(
       "Access-Control-Allow-Origin",
@@ -377,93 +376,120 @@ export default async function handler(
       "GET, OPTIONS"
     );
 
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type"
-    );
-
     return res
       .status(204)
       .end();
   }
 
-  // Only GET supported
-  if (req.method !== "GET") {
-    return sendJson(res, 405, {
-      error:
-        "METHOD_NOT_ALLOWED",
 
-      allowed: ["GET"],
-    });
+  // Only GET
+  if (req.method !== "GET") {
+    return sendJSON(
+      res,
+      405,
+      {
+        error:
+          "METHOD_NOT_ALLOWED",
+      }
+    );
   }
 
-  // Get dynamic group
-  const rawGroup =
-    req.query?.group;
 
+  // Get group
   const group =
-    Array.isArray(rawGroup)
-      ? rawGroup[0]
-      : rawGroup;
+    Array.isArray(
+      req.query.group
+    )
+      ? req.query.group[0]
+      : req.query.group;
+
 
   // Validate group
   if (!GROUPS.has(group)) {
-    return sendJson(res, 400, {
-      error:
-        "UNSUPPORTED_GROUP",
+    return sendJSON(
+      res,
+      400,
+      {
+        error:
+          "UNSUPPORTED_GROUP",
 
-      group:
-        group || null,
+        group,
 
-      supportedGroups:
-        [...GROUPS],
-    });
+        supportedGroups:
+          [...GROUPS],
+      }
+    );
   }
 
-  const forceRefresh =
-    String(
-      req.query?.refresh || ""
-    ) === "1";
 
-  const now = Date.now();
+  const forceRefresh =
+    req.query.refresh === "1";
 
   const existing =
     CACHE.get(group);
 
-  // --------------------------------------------------
-  // VALID CACHE
-  // --------------------------------------------------
+  const now =
+    Date.now();
 
-  const cacheValid =
-    existing &&
-    Number.isFinite(
-      existing.fetchedAtMs
-    ) &&
-    now -
-      existing.fetchedAtMs <
-      REFRESH_MS;
+
+  // ------------------------------------------------
+  // CACHE
+  // ------------------------------------------------
 
   if (
-    cacheValid &&
-    !forceRefresh
+    existing &&
+    !forceRefresh &&
+    now -
+      existing.fetchedAtMs <
+      REFRESH_MS
   ) {
-    return sendJson(
+
+    return sendJSON(
       res,
       200,
+      {
+        source:
+          "CelesTrak GP API",
 
-      publicPayload(
-        group,
-        existing,
-        "SCHEDULED CACHE"
-      )
+        feed:
+          group,
+
+        status:
+          "SCHEDULED CACHE",
+
+        rawText:
+          existing.rawText,
+
+        records:
+          existing.records,
+
+        fetchTimeUtc:
+          existing.fetchedAt,
+
+        upstreamFetchTimeUtc:
+          existing.fetchedAt,
+
+        nextRefreshUtc:
+          new Date(
+            existing.fetchedAtMs +
+              REFRESH_MS
+          ).toISOString(),
+
+        objectCount:
+          existing.records.length,
+
+        ...existing.stats,
+      }
     );
   }
 
-  // --------------------------------------------------
-  // FETCH LIVE DATA
-  // --------------------------------------------------
+
+  // ------------------------------------------------
+  // FRESH CELESTRAK DATA
+  // ------------------------------------------------
 
   try {
+
     const fresh =
       await fetchUpstream(
         group
@@ -474,50 +500,108 @@ export default async function handler(
       fresh
     );
 
-    return sendJson(
+    return sendJSON(
       res,
       200,
+      {
+        source:
+          "CelesTrak GP API",
 
-      publicPayload(
-        group,
-        fresh,
-        "LIVE CATALOG"
-      )
+        feed:
+          group,
+
+        status:
+          "LIVE CATALOG",
+
+        rawText:
+          fresh.rawText,
+
+        records:
+          fresh.records,
+
+        fetchTimeUtc:
+          fresh.fetchedAt,
+
+        upstreamFetchTimeUtc:
+          fresh.fetchedAt,
+
+        nextRefreshUtc:
+          new Date(
+            fresh.fetchedAtMs +
+              REFRESH_MS
+          ).toISOString(),
+
+        objectCount:
+          fresh.records.length,
+
+        ...fresh.stats,
+      }
     );
-  } catch (error) {
-    const reason =
-      error instanceof Error
-        ? error.message
-        : String(error);
 
-    // Use last successful cache
-    // if CelesTrak temporarily fails.
+  } catch (error) {
+
+    // ------------------------------------------------
+    // FALLBACK TO CACHE
+    // ------------------------------------------------
+
     if (existing) {
-      return sendJson(
+
+      return sendJSON(
         res,
         200,
+        {
+          source:
+            "CelesTrak GP API",
 
-        publicPayload(
-          group,
-          existing,
-          "SCHEDULED CACHE",
-          {
-            fallbackReason:
-              reason,
-          }
-        )
+          feed:
+            group,
+
+          status:
+            "SCHEDULED CACHE",
+
+          rawText:
+            existing.rawText,
+
+          records:
+            existing.records,
+
+          fetchTimeUtc:
+            existing.fetchedAt,
+
+          upstreamFetchTimeUtc:
+            existing.fetchedAt,
+
+          nextRefreshUtc:
+            new Date(
+              existing.fetchedAtMs +
+                REFRESH_MS
+            ).toISOString(),
+
+          objectCount:
+            existing.records.length,
+
+          fallbackReason:
+            error.message,
+
+          ...existing.stats,
+        }
       );
     }
 
-    // No cached data available.
-    return sendJson(
+
+    // ------------------------------------------------
+    // TOTAL FAILURE
+    // ------------------------------------------------
+
+    return sendJSON(
       res,
       502,
       {
         error:
           "UPSTREAM_UNAVAILABLE",
 
-        reason,
+        reason:
+          error.message,
 
         group,
 
