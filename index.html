@@ -559,7 +559,7 @@ function rebuildSatellitePointsMesh(){
    dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.28*scale);dummy.translateZ(.024*scale);dummy.scale.setScalar(scale);dummy.updateMatrix();antennaStem.setMatrixAt(i,dummy.matrix);
    dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.33*scale);dummy.translateZ(.024*scale);dummy.scale.setScalar(scale);dummy.updateMatrix();antenna.setMatrixAt(i,dummy.matrix);
   });
-  parts.forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true});
+  parts.forEach(m=>{m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;m.frustumCulled=false});
   group.userData.parts=parts;scene.add(group);satellitePoints=group;satelliteGeometry=g.bodyGeo;satelliteMaterial=mats.body;
   spacecraftLayers=parts.map(m=>({geometry:m.geometry,material:m.material}));
  }
@@ -569,7 +569,7 @@ function rebuildSatellitePointsMesh(){
   const mesh=new THREE.InstancedMesh(geo,mat,debris.length);mesh.name='3D Debris';mesh.userData.satIndices=debris;mesh.userData.kind='debris';mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   const dummy=setInstanceTransform.dummy||(setInstanceTransform.dummy=new THREE.Object3D());
   debris.forEach((globalIndex,i)=>{const sat=filteredSatellites[globalIndex],p=sat.positionVector,selected=selectedSatellite&&sat.noradId===selectedSatellite.noradId,ang=(globalIndex%37)*.51,size=(.30+(globalIndex%9)*.035)*(selected?2.35:1);dummy.position.copy(p);dummy.rotation.set(ang*.73,ang,ang*.41);dummy.scale.set(size,.68*size,1.18*size);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);mesh.setColorAt(i,selected?new THREE.Color(0xffd21f):new THREE.Color().setRGB(.34+.035*(globalIndex%4),.31+.03*(globalIndex%4),.27+.025*(globalIndex%4)));});
-  mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;scene.add(mesh);debrisPoints=mesh;debrisGeometry=geo;debrisMaterial=mat;debrisLayer=mesh;
+  mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);debrisPoints=mesh;debrisGeometry=geo;debrisMaterial=mat;debrisLayer=mesh;
  }
 }
 
@@ -584,7 +584,7 @@ function syncPointGeometryPositions(){
    dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateX(-.215*scale);dummy.updateMatrix();parts[4].setMatrixAt(i,dummy.matrix);dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateX(.215*scale);dummy.updateMatrix();parts[5].setMatrixAt(i,dummy.matrix);
    dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.23*scale);dummy.updateMatrix();parts[6].setMatrixAt(i,dummy.matrix);dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.23*scale);dummy.translateZ(.025*scale);dummy.updateMatrix();parts[7].setMatrixAt(i,dummy.matrix);
    dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.34*scale);dummy.translateZ(.025*scale);dummy.updateMatrix();parts[9].setMatrixAt(i,dummy.matrix);dummy.position.copy(p);dummy.quaternion.copy(q);dummy.translateY(.41*scale);dummy.translateZ(.025*scale);dummy.scale.setScalar(scale);dummy.updateMatrix();parts[8].setMatrixAt(i,dummy.matrix);
-  });parts.forEach(m=>m.instanceMatrix.needsUpdate=true);
+  });parts.forEach(m=>{m.instanceMatrix.needsUpdate=true;m.frustumCulled=false});
  }
  if(debrisPoints){const indices=debrisPoints.userData.satIndices;indices.forEach((globalIndex,i)=>{const sat=filteredSatellites[globalIndex],p=sat?.positionVector;if(!p)return;const selected=selectedSatellite&&sat.noradId===selectedSatellite.noradId,ang=(globalIndex%37)*.51,size=(.30+(globalIndex%9)*.035)*(selected?2.35:1);dummy.position.copy(p);dummy.rotation.set(ang*.73,ang,ang*.41);dummy.scale.set(size,.68*size,1.18*size);dummy.updateMatrix();debrisPoints.setMatrixAt(i,dummy.matrix)});debrisPoints.instanceMatrix.needsUpdate;debrisPoints.instanceMatrix.needsUpdate=true;}
 }
