@@ -287,10 +287,10 @@ document.addEventListener('DOMContentLoaded',init);
 function initScene(){
  const container=document.getElementById('webgl-container');scene=new THREE.Scene();
  camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,1000);camera.position.set(0,0,25);
- renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.82;container.appendChild(renderer.domElement);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;container.appendChild(renderer.domElement);
  raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.48;renderer.domElement.addEventListener('click',selectSatelliteFromGlobe);createSelectionMarker();loadSelectedSatelliteModel();
  controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.05;controls.minDistance=8;controls.maxDistance=130;
- scene.background=new THREE.Color(0x02040b);const hemi=new THREE.HemisphereLight(0xb9d8ff,0x24384a,.95);scene.add(hemi);const fill=new THREE.AmbientLight(0x6f86a0,0.24);scene.add(fill);const sun=new THREE.DirectionalLight(0xffffff,1.45);sun.position.set(8,5,6);scene.add(sun);const nightFill=new THREE.DirectionalLight(0x6688aa,0.30);nightFill.position.set(-7,-4,-5);scene.add(nightFill);addStarfield();
+ scene.background=new THREE.Color(0x02040b);const hemi=new THREE.HemisphereLight(0xb9d8ff,0x24384a,1.65);scene.add(hemi);const fill=new THREE.AmbientLight(0x6f86a0,0.42);scene.add(fill);const sun=new THREE.DirectionalLight(0xffffff,2.25);sun.position.set(8,5,6);scene.add(sun);const nightFill=new THREE.DirectionalLight(0x6688aa,0.55);nightFill.position.set(-7,-4,-5);scene.add(nightFill);addStarfield();
  const R=6.371;
  const earthMaterial=new THREE.MeshPhongMaterial({color:0xffffff,emissive:0x050b12,emissiveIntensity:.14,specular:0x6f98ad,shininess:24});
  earthMesh=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),earthMaterial);scene.add(earthMesh);
@@ -546,36 +546,103 @@ function makeDishGeometry(){
 }
 function makeMarkerTexture(){
  const c=document.createElement('canvas');c.width=64;c.height=64;const ctx=c.getContext('2d');
- const g=ctx.createRadialGradient(32,32,2,32,32,30);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.12,'rgba(255,255,255,1)');g.addColorStop(.28,'rgba(185,230,255,.80)');g.addColorStop(.52,'rgba(70,180,255,.26)');g.addColorStop(1,'rgba(70,180,255,0)');
+ const g=ctx.createRadialGradient(32,32,2,32,32,30);g.addColorStop(0,'rgba(255,255,255,0.95)');g.addColorStop(.22,'rgba(130,205,255,.55)');g.addColorStop(1,'rgba(70,180,255,0)');
  ctx.fillStyle=g;ctx.beginPath();ctx.arc(32,32,30,0,Math.PI*2);ctx.fill();
  const tex=new THREE.CanvasTexture(c);tex.needsUpdate=true;return tex;
 }
 
+// Compact, reusable spacecraft inspired directly by the supplied reference model:
+// metallic body + two dark-blue solar wings + struts + antenna + small status beacon.
+// We use InstancedMesh layers so thousands of satellites remain fast and readable.
+function ensureReferenceSatelliteGeometries(){
+ if(window.__refSatGeos)return window.__refSatGeos;
+ window.__refSatGeos={
+  body:new THREE.BoxGeometry(.09,.09,.13),
+  panel:new THREE.BoxGeometry(.20,.008,.09),
+  strut:new THREE.BoxGeometry(.10,.012,.02),
+  antenna:new THREE.CylinderGeometry(.004,.004,.09,6),
+  beacon:new THREE.SphereGeometry(.022,8,8),
+  debris:new THREE.IcosahedronGeometry(.045,0)
+ };
+ return window.__refSatGeos;
+}
+function ensureReferenceSatelliteMaterials(){
+ if(window.__refSatMats)return window.__refSatMats;
+ window.__refSatMats={
+  body:new THREE.MeshPhongMaterial({color:0xcfd6e2,specular:0xffffff,shininess:55}),
+  panel:new THREE.MeshPhongMaterial({color:0x14254a,specular:0x88aaff,shininess:90,emissive:0x040814}),
+  strut:new THREE.MeshPhongMaterial({color:0x8a93a8,specular:0xffffff,shininess:45}),
+  antenna:new THREE.MeshBasicMaterial({color:0xe8ecf4}),
+  beacon:new THREE.MeshBasicMaterial({color:0x8a6a3f}),
+  debris:new THREE.MeshPhongMaterial({color:0x6b5654,specular:0x554444,shininess:12,flatShading:true})
+ };
+ return window.__refSatMats;
+}
 function rebuildSatellitePointsMesh(){
  disposePointLayers();
- const positions=[],colors=[],debrisPositions=[],debrisColors=[];
- filteredSatellites.forEach((sat)=>{
+ const geos=ensureReferenceSatelliteGeometries(),mats=ensureReferenceSatelliteMaterials();
+ const groups={body:[],panel:[],strut:[],antenna:[],beacon:[],debris:[]};
+ const indices={body:[],panel:[],strut:[],antenna:[],beacon:[],debris:[]};
+ filteredSatellites.forEach((sat,i)=>{
   const p=sat.positionVector;
   if(!p||!Number.isFinite(p.x))return;
-  const isDebris=sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT');
-  const far=sat.orbitBand==='meo'||sat.orbitBand==='far';
-  const c=isDebris?new THREE.Color(0x7f8b95):(far?new THREE.Color(0x3db8ff):new THREE.Color(0xdff7ff));
-  const target=isDebris?debrisPositions:positions, targetColors=isDebris?debrisColors:colors;
-  target.push(p.x,p.y,p.z);targetColors.push(c.r,c.g,c.b);
+  const debris=sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT');
+  if(debris){groups.debris.push(sat);indices.debris.push(i);return;}
+  groups.body.push(sat);indices.body.push(i);indices.panel.push(i);indices.strut.push(i);indices.antenna.push(i);indices.beacon.push(i);
  });
- if(positions.length){
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  const mat=new THREE.PointsMaterial({map:makeMarkerTexture(),size:.060,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.72,alphaTest:.08,depthWrite:false,blending:THREE.NormalBlending});
-  satellitePoints=new THREE.Points(geo,mat);satellitePoints.name='Satellite Markers';satellitePoints.userData.satIndices=filteredSatellites.map((s,i)=>i).filter(i=>{const p=filteredSatellites[i].positionVector;return p&&Number.isFinite(p.x)&&!(filteredSatellites[i].objectType.includes('DEBRIS')||filteredSatellites[i].objectType.includes('FRAGMENT'))});satellitePoints.frustumCulled=false;scene.add(satellitePoints);satelliteGeometry=geo;satelliteMaterial=mat;
+ const dummy=new THREE.Object3D();
+ function addLayer(key,geo,mat,count,scale,renderOrder=10){
+  if(!count)return null;
+  const mesh=new THREE.InstancedMesh(geo,mat,count);mesh.name='Reference '+key;mesh.frustumCulled=false;mesh.renderOrder=renderOrder;mesh.userData.satIndices=indices[key].slice();
+  for(let i=0;i<count;i++){
+   const sat=groups.body[i];const p=sat.positionVector;dummy.position.copy(p);dummy.quaternion.copy(sat.orientationQuaternion||new THREE.Quaternion());dummy.scale.setScalar(scale*(sat.orbitBand==='far'?1.18:sat.orbitBand==='meo'?1.08:1));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate=true;scene.add(mesh);return mesh;
  }
- if(debrisPositions.length){
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(debrisPositions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(debrisColors,3));
-  const mat=new THREE.PointsMaterial({map:makeMarkerTexture(),size:.045,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.48,alphaTest:.08,depthWrite:false,blending:THREE.NormalBlending});
-  debrisPoints=new THREE.Points(geo,mat);debrisPoints.name='Debris Markers';debrisPoints.userData.satIndices=filteredSatellites.map((s,i)=>i).filter(i=>filteredSatellites[i].objectType.includes('DEBRIS')||filteredSatellites[i].objectType.includes('FRAGMENT'));debrisPoints.frustumCulled=false;scene.add(debrisPoints);debrisGeometry=geo;debrisMaterial=mat;
+ satellitePoints=addLayer('body',geos.body,mats.body,groups.body.length,.42,12);
+ // The panel/strut/antenna layers need local offsets in the satellite frame.
+ function addPartLayer(key,geo,mat,offset,partScale,renderOrder=13){
+  if(!groups.body.length)return null;
+  const mesh=new THREE.InstancedMesh(geo,mat,groups.body.length);mesh.name='Reference '+key;mesh.frustumCulled=false;mesh.renderOrder=renderOrder;mesh.userData.satIndices=indices[key].slice();
+  for(let i=0;i<groups.body.length;i++){
+   const sat=groups.body[i],p=sat.positionVector,q=sat.orientationQuaternion||new THREE.Quaternion();dummy.position.set(offset.x,offset.y,offset.z).applyQuaternion(q).add(p);dummy.quaternion.copy(q);dummy.scale.setScalar(partScale*(sat.orbitBand==='far'?1.18:sat.orbitBand==='meo'?1.08:1));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate=true;scene.add(mesh);return mesh;
+ }
+ const panelL=addPartLayer('panelL',geos.panel,mats.panel,new THREE.Vector3(-.19,0,0),.42,13);
+ const panelR=addPartLayer('panelR',geos.panel,mats.panel,new THREE.Vector3(.19,0,0),.42,13);
+ const strutL=addPartLayer('strutL',geos.strut,mats.strut,new THREE.Vector3(-.095,0,0),.42,14);
+ const strutR=addPartLayer('strutR',geos.strut,mats.strut,new THREE.Vector3(.095,0,0),.42,14);
+ const antenna=addPartLayer('antenna',geos.antenna,mats.antenna,new THREE.Vector3(0,.045,.11),.42,14);
+ // Beacon is kept very small; MEO/GEO get a blue halo layer separately.
+ const beacon=addPartLayer('beacon',geos.beacon,mats.beacon,new THREE.Vector3(0,.06,-.05),.42,15);
+ spacecraftLayers=[satellitePoints,panelL,panelR,strutL,strutR,antenna,beacon].filter(Boolean);
+ spacecraftLayers.forEach(layer=>{layer.userData.satIndices=indices.body.slice();layer.frustumCulled=false;});
+ debrisPoints=null;
+ if(groups.debris.length){
+  const mesh=new THREE.InstancedMesh(geos.debris,mats.debris,groups.debris.length);mesh.name='Reference Debris';mesh.frustumCulled=false;mesh.renderOrder=10;mesh.userData.satIndices=indices.debris.slice();
+  for(let i=0;i<groups.debris.length;i++){const sat=groups.debris[i],p=sat.positionVector;dummy.position.copy(p);dummy.quaternion.copy(sat.orientationQuaternion||new THREE.Quaternion());dummy.scale.setScalar(.22);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix)}
+  mesh.instanceMatrix.needsUpdate=true;scene.add(mesh);debrisPoints=mesh;debrisLayer=mesh;
  }
  rebuildAltitudeGlow();updateSelectedModel();
 }
-
+function syncPointGeometryPositions(){
+ const dummy=new THREE.Object3D();
+ if(spacecraftLayers.length){
+  const offsets={body:[0,0,0],panelL:[-.19,0,0],panelR:[.19,0,0],strutL:[-.095,0,0],strutR:[.095,0,0],antenna:[0,.045,.11],beacon:[0,.06,-.05]};
+  spacecraftLayers.forEach(layer=>{
+   const key=(layer.name||'').replace('Reference ','').split(' ')[0],offset=offsets[key]||[0,0,0];
+   const idxs=layer.userData.satIndices||[];
+   for(let i=0;i<idxs.length;i++){
+    const sat=filteredSatellites[idxs[i]];if(!sat?.positionVector)continue;const q=sat.orientationQuaternion||new THREE.Quaternion();
+    dummy.position.set(offset[0],offset[1],offset[2]).applyQuaternion(q).add(sat.positionVector);dummy.quaternion.copy(q);const base=key==='body'?0.42:.42;dummy.scale.setScalar(base*(sat.orbitBand==='far'?1.18:sat.orbitBand==='meo'?1.08:1));dummy.updateMatrix();layer.setMatrixAt(i,dummy.matrix);
+   }
+   layer.instanceMatrix.needsUpdate=true;
+  });
+ }
+ if(debrisPoints){const idxs=debrisPoints.userData.satIndices||[];for(let i=0;i<idxs.length;i++){const sat=filteredSatellites[idxs[i]];if(!sat?.positionVector)continue;dummy.position.copy(sat.positionVector);dummy.quaternion.copy(sat.orientationQuaternion||new THREE.Quaternion());dummy.scale.setScalar(.22);dummy.updateMatrix();debrisPoints.setMatrixAt(i,dummy.matrix)}debrisPoints.instanceMatrix.needsUpdate=true}
+ rebuildAltitudeGlow();updateSelectedModel();
+}
 function loadSelectedSatelliteModel(){
  if(selectedModelLoading||selectedModelReady)return;
  selectedModelLoading=true;
@@ -595,7 +662,7 @@ function updateSelectedModel(){
  }
  if(!selectedModel){selectedModel=selectedModelTemplate.clone(true);selectedModel.name='Selected Detailed Spacecraft';scene.add(selectedModel);}
  selectedModel.visible=true;selectedModel.position.copy(selectedSatellite.positionVector);selectedModel.quaternion.copy(selectedSatellite.orientationQuaternion||new THREE.Quaternion());
- const d=camera.position.distanceTo(selectedModel.position);const s=(selectedModelTemplate.userData.normalizedScale||.12)*THREE.MathUtils.clamp(d/22,.72,1.15);selectedModel.scale.setScalar(s);
+ const d=camera.position.distanceTo(selectedModel.position);const s=(selectedModelTemplate.userData.normalizedScale||.12)*THREE.MathUtils.clamp(d/18,.9,1.55);selectedModel.scale.setScalar(s);
  selectedModel.traverse(o=>{if(o.isMesh&&o.material){const mats=Array.isArray(o.material)?o.material:o.material?[o.material]:[];mats.forEach(m=>{m.emissive=m.emissive||new THREE.Color(0,0,0);m.emissive.set(0x12324a);m.emissiveIntensity=.22;});}});
 }
 function rebuildAltitudeGlow(){
@@ -605,7 +672,7 @@ function rebuildAltitudeGlow(){
  const positions=new Float32Array(far.length*3);
  far.forEach((s,i)=>{positions[i*3]=s.positionVector.x;positions[i*3+1]=s.positionVector.y;positions[i*3+2]=s.positionVector.z});
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
- const mat=new THREE.PointsMaterial({color:0x32a8ff,size:.16,sizeAttenuation:true,transparent:true,opacity:.34,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true});
+ const mat=new THREE.PointsMaterial({color:0x32a8ff,size:.16,sizeAttenuation:true,transparent:true,opacity:.58,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false});
  altitudeGlowPoints=new THREE.Points(geo,mat);altitudeGlowPoints.name='MEO GEO Blue Glow';altitudeGlowPoints.frustumCulled=false;altitudeGlowPoints.renderOrder=18;scene.add(altitudeGlowPoints);
 }
 function syncPointGeometryPositions(){
