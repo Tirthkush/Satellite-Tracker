@@ -604,7 +604,7 @@ function rebuildSatellitePointsMesh(){
  // The panel/strut/antenna layers need local offsets in the satellite frame.
  function addPartLayer(key,geo,mat,offset,partScale,renderOrder=13){
   if(!groups.body.length)return null;
-  const mesh=new THREE.InstancedMesh(geo,mat,groups.body.length);mesh.name='Reference '+key;mesh.frustumCulled=false;mesh.renderOrder=renderOrder;mesh.userData.satIndices=indices[key].slice();
+  const mesh=new THREE.InstancedMesh(geo,mat,groups.body.length);mesh.name='Reference '+key;mesh.frustumCulled=false;mesh.renderOrder=renderOrder;mesh.userData.satIndices=indices.body.slice();
   for(let i=0;i<groups.body.length;i++){
    const sat=groups.body[i],p=sat.positionVector,q=sat.orientationQuaternion||new THREE.Quaternion();dummy.position.set(offset.x,offset.y,offset.z).applyQuaternion(q).add(p);dummy.quaternion.copy(q);dummy.scale.setScalar(partScale*(sat.orbitBand==='far'?1.18:sat.orbitBand==='meo'?1.08:1));dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
   }
