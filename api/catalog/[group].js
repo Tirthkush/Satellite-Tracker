@@ -1,3 +1,6 @@
+// Vercel Serverless Function
+// Route: /api/catalog/[group]
+
 const GROUPS = new Set([
   "active",
   "stations",
@@ -40,50 +43,43 @@ function checksumOk(line) {
 // --------------------------------------------------
 
 function validEpoch(line1) {
-  return /^\d{1,2}\d{3}\.\d{8}$/.test(line1.slice(18, 32));
+  if (!line1 || line1.length < 32) return false;
+
+  const epoch = line1.slice(18, 32);
+
+  return /^\d{2}\d{3}\.\d{8}$/.test(epoch);
 }
 
 // --------------------------------------------------
-// PARSE RAW TLE
+// PARSE TLE DATA
 // --------------------------------------------------
 
 function parseTLE(text) {
-  const lines = text
+  const lines = String(text || "")
     .split(/\r?\n/)
-    .map((x) => x.trim())
-    .filter(Boolean);
+    .map((line) => line.trimEnd())
+    .filter((line) => line.trim().length > 0);
 
   const records = [];
 
   for (let i = 0; i < lines.length - 1; i++) {
-    if (!lines[i].startsWith("1 ")) {
-      continue;
-    }
+    const line1 = lines[i].trim();
+    const line2 = lines[i + 1].trim();
 
-    const line1 = lines[i];
-    const line2 = lines[i + 1];
+    if (!line1.startsWith("1 ")) continue;
+    if (!line2.startsWith("2 ")) continue;
 
-    if (!line2.startsWith("2 ")) {
-      continue;
-    }
+    if (!checksumOk(line1)) continue;
+    if (!checksumOk(line2)) continue;
+    if (!validEpoch(line1)) continue;
 
-    if (!checksumOk(line1)) {
-      continue;
-    }
-
-    if (!checksumOk(line2)) {
-      continue;
-    }
-
-    if (!validEpoch(line1)) {
-      continue;
-    }
+    const previous = i > 0 ? lines[i - 1].trim() : "";
 
     const name =
-      i > 0 &&
-      !lines[i - 1].startsWith("1 ") &&
-      !lines[i - 1].startsWith("2 ")
-        ? lines[i - 1]
+      previous &&
+      !previous.startsWith("1 ") &&
+      !previous.startsWith("2 ")
+        ? previous
         : `NORAD ${line1.slice(2, 7).trim()}`;
 
     records.push({
@@ -99,17 +95,20 @@ function parseTLE(text) {
 }
 
 // --------------------------------------------------
-// CONVERT RECORDS BACK TO RAW TLE TEXT
+// CONVERT RECORDS BACK TO TLE TEXT
 // --------------------------------------------------
 
 function recordsToTLE(records) {
   return records
-    .map((record) => `${record.name}\n${record.line1}\n${record.line2}`)
+    .map(
+      (record) =>
+        `${record.name}\n${record.line1}\n${record.line2}`
+    )
     .join("\n");
 }
 
 // --------------------------------------------------
-// TLE EPOCH → DATE
+// EPOCH → DATE
 // --------------------------------------------------
 
 function epochToDate(line1) {
@@ -118,21 +117,23 @@ function epochToDate(line1) {
 
   const year = yy >= 57 ? 1900 + yy : 2000 + yy;
 
-  return new Date(Date.UTC(year, 0, 1) + (day - 1) * 86400000);
+  return new Date(
+    Date.UTC(year, 0, 1) +
+      (day - 1) * 86400000
+  );
 }
 
 // --------------------------------------------------
-// CATALOG STATISTICS
+// BASIC DATA STATS
 // --------------------------------------------------
 
-function stats(records) {
+function getStats(records) {
   const now = Date.now();
 
   const ages = records
     .map((record) => {
-      const epoch = epochToDate(record.line1);
-
-      return (now - epoch.getTime()) / 3600000;
+      const date = epochToDate(record.line1);
+      return (now - date.getTime()) / 3600000;
     })
     .filter(Number.isFinite);
 
@@ -145,25 +146,46 @@ function stats(records) {
     };
   }
 
-  const sorted = [...ages].sort((a, b) => a - b);
+  const sortedAges = [...ages].sort(
+    (a, b) => a - b
+  );
 
-  const median =
-    sorted.length % 2
-      ? sorted[Math.floor(sorted.length / 2)]
-      : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+  const middle = Math.floor(
+    sortedAges.length / 2
+  );
+
+  const medianAge =
+    sortedAges.length % 2
+      ? sortedAges[middle]
+      : (
+          sortedAges[middle - 1] +
+          sortedAges[middle]
+        ) / 2;
 
   const epochs = records
     .map((record) => epochToDate(record.line1))
+    .filter(
+      (date) =>
+        !Number.isNaN(date.getTime())
+    )
     .sort((a, b) => a - b);
 
   return {
-    oldestEpoch: epochs[0].toISOString(),
+    oldestEpoch: epochs.length
+      ? epochs[0].toISOString()
+      : null,
 
-    newestEpoch: epochs[epochs.length - 1].toISOString(),
+    newestEpoch: epochs.length
+      ? epochs[epochs.length - 1].toISOString()
+      : null,
 
-    medianAgeHours: Number(median.toFixed(2)),
+    medianAgeHours: Number(
+      medianAge.toFixed(2)
+    ),
 
-    worstAgeHours: Number(Math.max(...ages).toFixed(2)),
+    worstAgeHours: Number(
+      Math.max(...ages).toFixed(2)
+    ),
   };
 }
 
@@ -174,191 +196,334 @@ function stats(records) {
 async function fetchUpstream(group) {
   const controller = new AbortController();
 
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, TIMEOUT_MS);
 
   try {
-    const url = `${UPSTREAM}?GROUP=${encodeURIComponent(group)}&FORMAT=tle`;
+    const url =
+      `${UPSTREAM}?GROUP=${encodeURIComponent(group)}` +
+      `&FORMAT=tle`;
 
     const response = await fetch(url, {
+      method: "GET",
+
       signal: controller.signal,
 
       headers: {
+        Accept: "text/plain",
+
         "User-Agent":
-          "SatTracker/Phase3 (+https://github.com/Tirthkush/Satellite-Tracker)",
+          "SatTracker/Live (+https://github.com/Tirthkush/Satellite-Tracker)",
       },
     });
 
-    // Fast-fail rate limiting / blocking
-    if (response.status === 403 || response.status === 429) {
-      throw new Error(`UPSTREAM_${response.status}`);
+    if (response.status === 403) {
+      throw new Error(
+        "CELESTRAK_HTTP_403"
+      );
+    }
+
+    if (response.status === 429) {
+      throw new Error(
+        "CELESTRAK_HTTP_429"
+      );
     }
 
     if (!response.ok) {
-      throw new Error(`UPSTREAM_HTTP_${response.status}`);
+      throw new Error(
+        `CELESTRAK_HTTP_${response.status}`
+      );
     }
 
     const text = await response.text();
 
+    if (
+      !text ||
+      text.trim().length < 10
+    ) {
+      throw new Error(
+        "EMPTY_CELESTRAK_RESPONSE"
+      );
+    }
+
     const records = parseTLE(text);
 
     if (!records.length) {
-      throw new Error("MALFORMED_TLE_PAYLOAD");
+      throw new Error(
+        "NO_VALID_TLE_RECORDS"
+      );
     }
+
+    const fetchedAt =
+      new Date().toISOString();
 
     return {
       records,
-      rawText: recordsToTLE(records),
-      fetchedAt: new Date().toISOString(),
+
+      rawText:
+        recordsToTLE(records),
+
+      fetchedAt,
+
+      fetchedAtMs:
+        Date.parse(fetchedAt),
+
+      stats:
+        getStats(records),
     };
   } finally {
-    clearTimeout(timer);
+    clearTimeout(timeout);
   }
 }
 
 // --------------------------------------------------
-// VERCEL SERVERLESS FUNCTION
+// JSON RESPONSE
 // --------------------------------------------------
 
-export default async function handler(req, res) {
-  const group = req.query.group;
+function sendJson(res, status, body) {
+  res.setHeader(
+    "Content-Type",
+    "application/json; charset=utf-8"
+  );
 
-  // ------------------------------------------------
-  // Validate group
-  // ------------------------------------------------
+  res.setHeader(
+    "Cache-Control",
+    "no-store"
+  );
 
-  if (!GROUPS.has(group)) {
-    return res.status(400).json({
-      error: "UNSUPPORTED_GROUP",
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
 
-      group,
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, OPTIONS"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type"
+  );
+
+  return res
+    .status(status)
+    .json(body);
+}
+
+// --------------------------------------------------
+// PUBLIC RESPONSE FORMAT
+// --------------------------------------------------
+
+function publicPayload(
+  group,
+  cached,
+  status,
+  extra = {}
+) {
+  return {
+    source:
+      "CelesTrak GP API",
+
+    feed: group,
+
+    status,
+
+    rawText:
+      cached.rawText,
+
+    records:
+      cached.records,
+
+    fetchTimeUtc:
+      cached.fetchedAt,
+
+    upstreamFetchTimeUtc:
+      cached.fetchedAt,
+
+    nextRefreshUtc:
+      new Date(
+        cached.fetchedAtMs +
+          REFRESH_MS
+      ).toISOString(),
+
+    objectCount:
+      cached.records.length,
+
+    ...cached.stats,
+
+    ...extra,
+  };
+}
+
+// --------------------------------------------------
+// VERCEL HANDLER
+// --------------------------------------------------
+
+export default async function handler(
+  req,
+  res
+) {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      "*"
+    );
+
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, OPTIONS"
+    );
+
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type"
+    );
+
+    return res
+      .status(204)
+      .end();
+  }
+
+  // Only GET supported
+  if (req.method !== "GET") {
+    return sendJson(res, 405, {
+      error:
+        "METHOD_NOT_ALLOWED",
+
+      allowed: ["GET"],
     });
   }
+
+  // Get dynamic group
+  const rawGroup =
+    req.query?.group;
+
+  const group =
+    Array.isArray(rawGroup)
+      ? rawGroup[0]
+      : rawGroup;
+
+  // Validate group
+  if (!GROUPS.has(group)) {
+    return sendJson(res, 400, {
+      error:
+        "UNSUPPORTED_GROUP",
+
+      group:
+        group || null,
+
+      supportedGroups:
+        [...GROUPS],
+    });
+  }
+
+  const forceRefresh =
+    String(
+      req.query?.refresh || ""
+    ) === "1";
 
   const now = Date.now();
 
-  const existing = CACHE.get(group);
+  const existing =
+    CACHE.get(group);
 
-  const forceRefresh = req.query.refresh === "1";
+  // --------------------------------------------------
+  // VALID CACHE
+  // --------------------------------------------------
 
-  const due = !existing || now - existing.fetchedAtMs >= REFRESH_MS;
+  const cacheValid =
+    existing &&
+    Number.isFinite(
+      existing.fetchedAtMs
+    ) &&
+    now -
+      existing.fetchedAtMs <
+      REFRESH_MS;
 
-  // ------------------------------------------------
-  // USE SCHEDULED CACHE
-  // ------------------------------------------------
+  if (
+    cacheValid &&
+    !forceRefresh
+  ) {
+    return sendJson(
+      res,
+      200,
 
-  if (!due && !forceRefresh) {
-    return res.status(200).json({
-      source: "CelesTrak GP API",
-
-      feed: group,
-
-      status: "SCHEDULED CACHE",
-
-      rawText: existing.rawText,
-
-      fetchTimeUtc: existing.fetchedAt,
-
-      upstreamFetchTimeUtc: existing.fetchedAt,
-
-      nextRefreshUtc: new Date(
-        existing.fetchedAtMs + REFRESH_MS,
-      ).toISOString(),
-
-      objectCount: existing.records.length,
-
-      ...existing.stats,
-
-      records: existing.records,
-    });
+      publicPayload(
+        group,
+        existing,
+        "SCHEDULED CACHE"
+      )
+    );
   }
 
-  // ------------------------------------------------
-  // FETCH FRESH DATA
-  // ------------------------------------------------
+  // --------------------------------------------------
+  // FETCH LIVE DATA
+  // --------------------------------------------------
 
   try {
-    const result = await fetchUpstream(group);
+    const fresh =
+      await fetchUpstream(
+        group
+      );
 
-    const payload = {
-      records: result.records,
+    CACHE.set(
+      group,
+      fresh
+    );
 
-      rawText: result.rawText,
+    return sendJson(
+      res,
+      200,
 
-      fetchedAt: result.fetchedAt,
-
-      fetchedAtMs: Date.parse(result.fetchedAt),
-
-      stats: stats(result.records),
-    };
-
-    CACHE.set(group, payload);
-
-    return res.status(200).json({
-      source: "CelesTrak GP API",
-
-      feed: group,
-
-      status: "LIVE CATALOG",
-
-      rawText: payload.rawText,
-
-      fetchTimeUtc: payload.fetchedAt,
-
-      upstreamFetchTimeUtc: payload.fetchedAt,
-
-      nextRefreshUtc: new Date(
-        payload.fetchedAtMs + REFRESH_MS,
-      ).toISOString(),
-
-      objectCount: payload.records.length,
-
-      ...payload.stats,
-
-      records: payload.records,
-    });
+      publicPayload(
+        group,
+        fresh,
+        "LIVE CATALOG"
+      )
+    );
   } catch (error) {
-    // ------------------------------------------------
-    // FALL BACK TO LAST GOOD CACHE
-    // ------------------------------------------------
+    const reason =
+      error instanceof Error
+        ? error.message
+        : String(error);
 
+    // Use last successful cache
+    // if CelesTrak temporarily fails.
     if (existing) {
-      return res.status(200).json({
-        source: "CelesTrak GP API",
+      return sendJson(
+        res,
+        200,
 
-        feed: group,
-
-        status: "SCHEDULED CACHE",
-
-        rawText: existing.rawText,
-
-        fallbackReason: error.message,
-
-        fetchTimeUtc: existing.fetchedAt,
-
-        upstreamFetchTimeUtc: existing.fetchedAt,
-
-        nextRefreshUtc: new Date(
-          existing.fetchedAtMs + REFRESH_MS,
-        ).toISOString(),
-
-        objectCount: existing.records.length,
-
-        ...existing.stats,
-
-        records: existing.records,
-      });
+        publicPayload(
+          group,
+          existing,
+          "SCHEDULED CACHE",
+          {
+            fallbackReason:
+              reason,
+          }
+        )
+      );
     }
 
-    // ------------------------------------------------
-    // NO CACHE AVAILABLE
-    // ------------------------------------------------
+    // No cached data available.
+    return sendJson(
+      res,
+      502,
+      {
+        error:
+          "UPSTREAM_UNAVAILABLE",
 
-    return res.status(502).json({
-      error: "UPSTREAM_UNAVAILABLE",
+        reason,
 
-      reason: error.message,
+        group,
 
-      group,
-    });
+        source:
+          "CelesTrak GP API",
+      }
+    );
   }
 }
