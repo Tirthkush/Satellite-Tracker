@@ -161,7 +161,7 @@ function validTleChecksum(line){
 const DataService={
  cache:new Map(),
  inFlightRequests:new Map(),
- API_BASE:(location.protocol==='file:' ? 'https://satellite-tracker-eight.vercel.app/api' : '/api'),
+ API_BASE:'/api',
  AUTO_REFRESH_MS:10*60*1000,
  refreshTimers:new Map(),
  ENDPOINTS:{active:'active',stations:'stations',starlink:'starlink',visual:'visual','fengyun-1c-debris':'fengyun-1c-debris'},
