@@ -84,7 +84,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 #search-results{max-height:145px}
 
 /* GROUND STATION — compact, no internal wall of text */
-#station-panel{top:344px;left:16px;width:340px;height:274px;max-height:none;overflow:hidden}
+#station-panel{top:344px;left:16px;width:340px;height:194px;max-height:none;overflow:hidden}
 #station-panel h3{font-size:.78rem!important;letter-spacing:.4px}
 .station-help{font-size:.63rem!important;line-height:1.3;margin-top:2px}
 .station-search{display:grid;grid-template-columns:1fr 58px;gap:5px;margin-top:7px}.station-search input{height:34px;font-size:.70rem}.station-search button{height:34px;width:auto}
@@ -92,14 +92,14 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 .station-selected{padding:7px 8px;margin-top:6px}.station-selected-title{font-size:.70rem}.station-selected-meta{font-size:.60rem}
 .station-grid{gap:6px;margin-top:6px}.station-grid label{font-size:.63rem}.station-grid input,.station-grid select{height:29px;font-size:.68rem}
 .station-advanced-toggle{font-size:.62rem;padding:4px 0;margin-top:4px}
-.station-actions{margin-top:5px}.station-actions button{padding:6px;font-size:.67rem}
-.station-meta{font-size:.59rem;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.station-actions{margin-top:4px}.station-actions button{padding:5px;font-size:.65rem}
+.station-meta{font-size:.57rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .station-grid-advanced.open{display:grid}
 
 /* LEFT BOTTOM — currently visible satellites */
-#overhead-panel{left:16px;bottom:16px;width:340px;height:170px;max-height:none;padding:11px;z-index:9}
+#overhead-panel{left:16px;top:548px;bottom:auto;width:340px;height:88px;max-height:none;padding:9px 11px;z-index:9}
 #overhead-panel h3{font-size:.72rem!important}
-#overhead-list{max-height:128px;margin-top:5px;overflow-y:auto}.sat-item{padding:5px 7px;font-size:.70rem}
+#overhead-list{max-height:58px;margin-top:3px;overflow-y:auto}.sat-item{padding:4px 7px;font-size:.67rem}
 
 /* RIGHT COLUMN — provenance / filters / selected satellite */
 #provenance-panel{top:16px;right:16px;width:340px;height:205px;max-height:none;overflow:auto}
@@ -117,6 +117,104 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 .pass-summary{border-top:1px solid #21262d;margin-top:7px;padding-top:7px}.pass-summary h4{font-size:.68rem;margin-bottom:5px}
 .pass-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px}.pass-metric{border:1px solid #30363d;border-radius:5px;background:rgba(31,111,235,.07);padding:5px 3px;text-align:center}.pass-metric-label{display:block;color:#8b949e;font-size:.52rem;text-transform:uppercase}.pass-metric-value{display:block;color:#58a6ff;font-family:monospace;font-size:.66rem;margin-top:2px;white-space:nowrap}.pass-metric-sub{display:block;color:#8b949e;font-size:.50rem;margin-top:1px;white-space:nowrap}
 #pass-list{max-height:125px;overflow-y:auto;padding-right:2px}.pass-card{padding:5px 6px;border:1px solid #30363d;background:rgba(1,4,9,.45);border-radius:5px;margin-bottom:4px;font-size:.60rem;line-height:1.3}.pass-time{font-family:monospace;color:#58a6ff}.pass-meta{color:#8b949e;margin-top:2px}
+
+
+/* ===== PASS PREDICTIONS — dedicated central information panel ===== */
+#pass-panel{
+  position:absolute;
+  left:calc(360px + 18px);
+  right:calc(360px + 18px);
+  bottom:72px;
+  height:164px;
+  padding:10px 12px;
+  z-index:17;
+  overflow:hidden;
+}
+#pass-panel .pass-summary{
+  border:0;
+  margin:0;
+  padding:0;
+}
+#pass-panel .pass-summary h4{
+  font-size:.70rem;
+  margin:0 0 6px;
+  letter-spacing:.55px;
+}
+#pass-panel .pass-hero{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:7px;
+}
+#pass-panel .pass-metric{
+  min-width:0;
+  padding:5px 6px;
+  border-radius:6px;
+  background:rgba(31,111,235,.07);
+}
+#pass-panel .pass-metric-label{
+  font-size:.55rem;
+}
+#pass-panel .pass-metric-value{
+  font-size:.70rem;
+}
+#pass-panel .pass-metric-sub{
+  font-size:.50rem;
+}
+#pass-panel #pass-list{
+  max-height:82px;
+  overflow-y:auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px 6px;
+  padding-right:3px;
+}
+#pass-panel .pass-card{
+  margin:0;
+  min-width:0;
+  padding:5px 7px;
+  font-size:.58rem;
+  line-height:1.25;
+}
+#pass-panel .pass-card>div:first-child{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#pass-panel .pass-meta{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#pass-panel .empty-note{
+  grid-column:1/-1;
+}
+
+/* Selected satellite card now contains only satellite information. */
+#detail-panel .pass-summary{display:none}
+#detail-panel{overflow-y:auto}
+
+/* Smaller screens: keep the pass panel readable without covering the whole globe. */
+@media(max-width:1250px){
+  #pass-panel{left:333px;right:333px;height:155px}
+}
+@media(max-width:900px){
+  #pass-panel{left:300px;right:300px;height:150px}
+  #pass-panel #pass-list{grid-template-columns:1fr;max-height:70px}
+}
+@media(max-width:650px){
+  #pass-panel{
+    position:relative;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto;
+    width:calc(100% - 20px);
+    height:auto;
+    max-height:none;
+    margin:10px;
+  }
+  #pass-panel #pass-list{max-height:none}
+}
 
 /* RADAR + TIMELINE */
 #radar-panel{right:375px;bottom:88px;width:160px;height:178px;padding:8px;z-index:8}#radar-panel h3{font-size:.65rem!important}#radar-canvas{width:128px;height:128px;margin:4px auto 0}
@@ -290,8 +388,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 @media(max-width:1200px){
   :root{--left-col:310px;--right-col:320px}
   #header-panel{height:390px}
-  #station-panel{top:416px;height:208px}
-  #overhead-panel{height:108px}
+  #station-panel{top:416px;height:180px}
+  #overhead-panel{height:78px;top:604px;bottom:auto}
   #provenance-panel{height:195px}
   #filters-panel{top:221px;height:180px}
   #detail-panel{top:411px}
@@ -300,8 +398,8 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 @media(max-width:900px){
   :root{--left-col:285px;--right-col:290px}
   #header-panel{height:380px}
-  #station-panel{top:404px;height:194px}
-  #overhead-panel{height:100px}
+  #station-panel{top:404px;height:174px}
+  #overhead-panel{height:76px;top:584px;bottom:auto}
   #provenance-panel{height:185px}
   #filters-panel{top:211px;height:170px}
   #detail-panel{top:391px}
@@ -320,6 +418,33 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
   }
   #detail-panel{display:none}
   #time-panel{left:50%}
+}
+
+
+/* FINAL PASS PANEL OVERRIDES */
+#pass-panel .pass-summary{display:block!important;border:0!important;margin:0!important;padding:0!important}
+#pass-panel #pass-list{display:grid!important;grid-template-columns:1fr 1fr!important;max-height:82px!important;overflow-y:auto!important}
+#pass-panel .pass-card{margin:0!important}
+@media(max-width:900px){
+  #pass-panel #pass-list{grid-template-columns:1fr!important;max-height:70px!important}
+}
+
+
+/* FINAL LEFT-COLUMN STACK — keep cards physically separated */
+@media(min-width:901px){
+  #header-panel{top:16px;height:318px}
+  #station-panel{top:344px;height:194px;overflow:hidden}
+  #overhead-panel{top:548px;bottom:auto;height:88px;overflow:hidden}
+  #overhead-list{max-height:58px;overflow-y:auto}
+}
+@media(min-width:651px) and (max-width:900px){
+  #header-panel{top:16px;height:300px}
+  #station-panel{top:326px;height:180px;overflow:hidden}
+  #overhead-panel{top:514px;bottom:auto;height:78px;overflow:hidden}
+  #overhead-list{max-height:48px;overflow-y:auto}
+}
+@media(max-width:650px){
+  #overhead-panel{position:relative;top:auto;bottom:auto;height:auto;max-height:none}
 }
 
 </style>
@@ -415,12 +540,17 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 <div class="detail-disclosure"><strong>PROPAGATED — SGP4/SDP4.</strong> No observation data is available. Values below are calculated from this object's TLE at <span id="sat-propagated-at" class="utc-clock">--</span>.</div>
 <div class="confidence-line">DATA CONFIDENCE: <span id="sat-confidence">--</span></div>
 <dl class="detail-list"><div class="prov-row"><dt>OBJECT TYPE:</dt><dd id="sat-type">--</dd></div><div class="prov-row"><dt>NORAD ID:</dt><dd id="sat-norad">--</dd></div><div class="prov-row"><dt>Latitude:</dt><dd id="sat-lat">--</dd></div><div class="prov-row"><dt>Longitude:</dt><dd id="sat-lng">--</dd></div><div class="prov-row"><dt>Altitude:</dt><dd id="sat-alt">--</dd></div><div class="prov-row"><dt>Velocity:</dt><dd id="sat-vel">--</dd></div><div class="prov-row"><dt>Azimuth:</dt><dd id="sat-az">--</dd></div><div class="prov-row"><dt>Elevation:</dt><dd id="sat-el">--</dd></div></dl><div class="detail-disclosure" id="pass-detail-summary"><strong>PASS PREDICTION:</strong> Select a ground station to calculate AOS, maximum elevation, LOS and duration.</div>
-<div class="pass-summary" aria-label="Pass predictions">
- <h4 id="pass-title">NEXT PASSES · UTC</h4>
+
+</div>
+
+
+<section id="pass-panel" class="ui-card" aria-label="Satellite pass predictions">
+  <div class="pass-summary" aria-label="Pass predictions">
+ <h4 id="pass-title">NEXT PASSES · UTC <span style="float:right;color:#8b949e;font-weight:400;font-size:.56rem">AOS · MAX ELEVATION · LOS · DURATION</span></h4>
  <div class="pass-hero" id="pass-hero"><div class="pass-metric"><span class="pass-metric-label">AOS</span><span class="pass-metric-value" id="pass-aos">--</span><span class="pass-metric-sub" id="pass-aos-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">Max Elev.</span><span class="pass-metric-value" id="pass-max">--</span><span class="pass-metric-sub" id="pass-max-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">LOS</span><span class="pass-metric-value" id="pass-los">--</span><span class="pass-metric-sub" id="pass-los-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">Duration</span><span class="pass-metric-value" id="pass-duration">--</span><span class="pass-metric-sub">above mask</span></div></div>
  <div id="pass-list"><div class="empty-note">Select a satellite to calculate passes.</div></div>
 </div>
-</div>
+</section>
 
 <div id="overhead-panel" class="ui-card"><h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Passes Above Horizon</h3><div id="overhead-list"><div class="empty-note">Scanning...</div></div></div>
 <div id="radar-panel" class="ui-card"><h3 style="font-size:.75rem;color:#8b949e;text-transform:uppercase">Sky Radar View</h3><canvas id="radar-canvas" width="180" height="180" role="img" aria-describedby="radar-description" aria-label="Sky radar showing tracked satellites above the horizon"></canvas><div id="radar-description" class="sr-only">No satellites above the horizon.</div></div>
