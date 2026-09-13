@@ -40,25 +40,31 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 @media(max-width:650px){body{overflow:auto;min-height:100vh}#webgl-container{position:fixed;opacity:.38}.ui-card{position:relative;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;transform:none!important;width:calc(100% - 20px)!important;max-height:none!important;margin:10px}#header-panel{margin-top:10px}#filters-panel{max-height:none}#time-panel{flex-wrap:wrap;justify-content:center}.status-banner{position:relative;top:auto;left:auto;transform:none;margin:10px;width:calc(100% - 20px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.spinner{animation:none}}
 
-/* Phase 4 — operational pass prediction controls */
-#station-panel{top:15px;left:355px;width:315px;max-height:275px;overflow:auto}
-#station-panel h3{font-size:.78rem!important;letter-spacing:.5px;margin-bottom:6px}
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
-.station-grid label{font-size:.64rem;color:#8b949e;line-height:1.1}
-.station-grid input,.station-grid select{display:block;width:100%;height:27px;margin-top:3px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.69rem}
-.station-actions{display:flex;gap:5px;margin-top:7px}
-.station-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px;border-radius:4px;cursor:pointer;font-size:.66rem}
-.station-actions button:hover{background:#1f6feb;border-color:#388bfd;color:#fff}
-.station-meta{font-size:.62rem;color:#8b949e;margin-top:6px;line-height:1.3}
-.pass-summary{border-top:1px solid #21262d;margin-top:7px;padding-top:6px}
-.pass-summary h4{font-size:.68rem;color:#c9d1d9;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-#pass-list{max-height:105px;overflow-y:auto;padding-right:2px}
-.pass-card{padding:5px 6px;border:1px solid #30363d;background:rgba(1,4,9,.45);border-radius:5px;margin-bottom:4px;font-size:.64rem;line-height:1.3}
-.pass-time{font-family:monospace;color:#58a6ff}
-.pass-meta{color:#8b949e;margin-top:2px}
-@media(max-width:1100px){#station-panel{left:325px;width:285px}}
-@media(max-width:900px){#station-panel{left:295px;width:270px}}
-@media(max-width:650px){#station-panel{position:relative;left:auto;top:auto;width:calc(100% - 20px)!important;margin:10px;max-height:none}}
+/* Phase 4 — user-friendly ground station + pass prediction */
+#station-panel{top:15px;left:355px;width:315px;max-height:360px;overflow:auto}
+#station-panel h3{font-size:.78rem!important;letter-spacing:.5px;margin-bottom:7px}
+.station-help{font-size:.66rem;color:#8b949e;line-height:1.35;margin-bottom:7px}
+.station-search{display:flex;gap:5px;margin-top:5px}
+.station-search input{flex:1;min-width:0;height:30px;padding:5px 8px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.72rem}
+.station-search button{width:64px;height:30px;background:#1f6feb;border:1px solid #388bfd;color:#fff;border-radius:4px;cursor:pointer;font-size:.68rem}
+.station-search button:hover{background:#388bfd}
+.station-location-actions{display:flex;gap:5px;margin-top:5px}
+.station-location-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:6px;border-radius:4px;cursor:pointer;font-size:.67rem}
+.station-location-actions button:hover{background:#1f6feb;border-color:#388bfd;color:#fff}
+#station-search-results{display:none;margin-top:5px;border:1px solid #30363d;border-radius:5px;overflow:hidden;max-height:145px;overflow-y:auto}
+.station-result{display:block;width:100%;padding:7px 8px;background:#0d1117;border:0;border-bottom:1px solid #21262d;color:#c9d1d9;text-align:left;cursor:pointer;font:inherit;font-size:.7rem}
+.station-result:last-child{border-bottom:0}.station-result:hover,.station-result:focus{background:#161b22;outline:2px solid rgba(88,166,255,.45);outline-offset:-2px}
+.station-result strong{display:block;color:#f0f6fc}.station-result small{display:block;color:#8b949e;margin-top:2px}
+.station-selected{margin-top:7px;padding:7px 8px;border:1px solid #30363d;border-radius:5px;background:rgba(31,111,235,.08)}
+.station-selected-title{font-size:.7rem;color:#58a6ff;font-weight:600}.station-selected-meta{font-size:.61rem;color:#8b949e;margin-top:2px;font-family:monospace}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+.station-grid label{font-size:.64rem;color:#8b949e;line-height:1.1}.station-grid input,.station-grid select{display:block;width:100%;height:27px;margin-top:3px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.69rem}
+.station-grid-advanced{display:none}.station-grid-advanced.open{display:grid}
+.station-advanced-toggle{display:block;width:100%;margin-top:6px;background:transparent;border:0;color:#8b949e;text-align:left;padding:3px 0;cursor:pointer;font-size:.64rem}.station-advanced-toggle:hover{color:#58a6ff}
+.station-actions{display:flex;gap:5px;margin-top:7px}.station-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:6px;border-radius:4px;cursor:pointer;font-size:.67rem}.station-actions button:hover{background:#1f6feb;border-color:#388bfd;color:#fff}
+.station-meta{font-size:.62rem;color:#8b949e;margin-top:6px;line-height:1.3}.pass-summary{border-top:1px solid #21262d;margin-top:7px;padding-top:6px}.pass-summary h4{font-size:.68rem;color:#c9d1d9;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+#pass-list{max-height:112px;overflow-y:auto;padding-right:2px}.pass-card{padding:5px 6px;border:1px solid #30363d;background:rgba(1,4,9,.45);border-radius:5px;margin-bottom:4px;font-size:.64rem;line-height:1.3}.pass-time{font-family:monospace;color:#58a6ff}.pass-meta{color:#8b949e;margin-top:2px}
+@media(max-width:1100px){#station-panel{left:325px;width:285px}}@media(max-width:900px){#station-panel{left:295px;width:270px}}@media(max-width:650px){#station-panel{position:relative;left:auto;top:auto;width:calc(100% - 20px)!important;margin:10px;max-height:none}}
 
 
 </style>
@@ -119,20 +125,34 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 </section>
 
 <section id="station-panel" class="ui-card" aria-label="Ground station and pass prediction settings">
- <h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-broadcast-tower"></i> Ground Station</span><span id="station-target" style="font-size:.62rem;color:#58a6ff;font-weight:400">NO TARGET</span></h3>
+ <h3 style="display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-broadcast-tower"></i> Ground Station</span><span id="station-target" style="font-size:.62rem;color:#58a6ff;font-weight:400">NO TARGET</span></h3>
+ <div class="station-help">Choose a place by name. You do not need to know coordinates.</div>
+ <div class="station-search">
+  <input id="station-place-search" type="search" placeholder="Search city or place…" autocomplete="off" aria-label="Search ground station location">
+  <button id="station-place-search-btn" type="button"><i class="fas fa-search"></i> Find</button>
+ </div>
+ <div id="station-search-results" role="listbox" aria-label="Location search results"></div>
+ <div class="station-location-actions">
+  <button id="use-location-station" type="button"><i class="fas fa-crosshairs"></i> Use my location</button>
+  <button id="station-clear-place" type="button"><i class="fas fa-undo"></i> Reset</button>
+ </div>
+ <div class="station-selected" id="station-selected" aria-live="polite">
+  <div class="station-selected-title" id="station-selected-title">No location selected</div>
+  <div class="station-selected-meta" id="station-selected-meta">Use search or “Use my location” to set the observer.</div>
+ </div>
  <div class="station-grid">
-  <label>Station name<input id="station-name" type="text" value="Observer Station" autocomplete="off"></label>
-  <label>Min elevation<input id="station-mask" type="number" min="0" max="90" step="0.1" value="0">°</label>
-  <label>Latitude<input id="station-lat" type="number" min="-90" max="90" step="0.0001" value="0"></label>
-  <label>Longitude<input id="station-lon" type="number" min="-180" max="180" step="0.0001" value="0"></label>
-  <label>Height<input id="station-height" type="number" min="-1" max="20" step="0.001" value="0"> km</label>
+  <label>Minimum elevation<input id="station-mask" type="number" min="0" max="90" step="0.1" value="10">°</label>
   <label>Prediction window<select id="station-window"><option value="12">12 h</option><option value="24" selected>24 h</option><option value="48">48 h</option></select></label>
  </div>
- <div class="station-actions">
-  <button id="apply-station"><i class="fas fa-map-marker-alt"></i> Apply station</button>
-  <button id="use-location-station"><i class="fas fa-crosshairs"></i> Use GPS</button>
+ <button id="station-advanced-toggle" class="station-advanced-toggle" type="button" aria-expanded="false"><i class="fas fa-chevron-right"></i> Advanced: station name & coordinates</button>
+ <div id="station-advanced-grid" class="station-grid station-grid-advanced">
+  <label>Station name<input id="station-name" type="text" value="Observer Station" autocomplete="off"></label>
+  <label>Height<input id="station-height" type="number" min="-1" max="20" step="0.001" value="0"> km</label>
+  <label>Latitude<input id="station-lat" type="number" min="-90" max="90" step="0.0001" value="0"></label>
+  <label>Longitude<input id="station-lon" type="number" min="-180" max="180" step="0.0001" value="0"></label>
  </div>
- <div class="station-meta" id="station-summary">Observer Station · 0.0000°, 0.0000° · 0.000 km · 0° mask · 24 h.</div>
+ <div class="station-actions"><button id="apply-station" type="button"><i class="fas fa-check"></i> Apply station</button></div>
+ <div class="station-meta" id="station-summary">No observer location selected · 10° mask · 24 h.</div>
  <div class="pass-summary">
   <h4 id="pass-title">Next passes</h4>
   <div id="pass-list"><div class="empty-note">Select a satellite to calculate passes.</div></div>
@@ -409,8 +429,8 @@ function initObserverLocation(){
  updateGroundStationSummary();
 }
 function requestObserverLocation(){
- if(!navigator.geolocation){updateObserverStatus('GPS unavailable');announce('This browser does not support location access.',true);return}
- updateObserverStatus('Requesting GPS…');navigator.geolocation.getCurrentPosition(pos=>{observerGd.latitude=pos.coords.latitude*Math.PI/180;observerGd.longitude=pos.coords.longitude*Math.PI/180;observerGd.height=(pos.coords.altitude||0)/1000;updateObserverMarker();syncStationInputs();updateGroundStationSummary();passPredictionToken++;const latitude=pos.coords.latitude.toFixed(4),longitude=pos.coords.longitude.toFixed(4);updateObserverStatus(`${latitude}°, ${longitude}°`);announce(`Your location is pinned at latitude ${latitude} degrees, longitude ${longitude} degrees.`);lastPropagationAt=0;updatePositions();if(selectedSatellite)calculateAndRenderPasses(selectedSatellite)},()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Horizon calculations use the default observer location.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000})}
+ useGpsAsGroundStation();
+}
 
 
 function syncStationInputs(){
@@ -422,37 +442,76 @@ function syncStationInputs(){
 function updateGroundStationSummary(){
  const el=document.getElementById('station-summary');if(!el)return;
  const lat=observerGd.latitude*180/Math.PI,lon=observerGd.longitude*180/Math.PI;
- el.textContent=`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}°, ${observerGd.height.toFixed(3)} km · ${groundStation.minElevationDeg.toFixed(1)}° mask · ${groundStation.windowHours} h`;
+ const hasLocation=Number.isFinite(lat)&&Number.isFinite(lon)&&(Math.abs(lat)>1e-8||Math.abs(lon)>1e-8||groundStation.name!=='Observer Station');
+ el.textContent=hasLocation?`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}° · ${groundStation.minElevationDeg.toFixed(1)}° mask · ${groundStation.windowHours} h.`:`No observer location selected · ${groundStation.minElevationDeg.toFixed(1)}° mask · ${groundStation.windowHours} h.`;
  const obs=document.getElementById('observer-status');
- if(obs)obs.textContent=`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+ if(obs)obs.textContent=hasLocation?`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}°`:'Location not set';
+ const title=document.getElementById('station-selected-title'),meta=document.getElementById('station-selected-meta');
+ if(title)title.textContent=hasLocation?groundStation.name:'No location selected';
+ if(meta)meta.textContent=hasLocation?`${lat.toFixed(4)}°, ${lon.toFixed(4)}° · ${observerGd.height.toFixed(3)} km`:'Use search or “Use my location” to set the observer.';
+}
+function setGroundStationLocation(name,latDeg,lonDeg,heightKm=0,announceIt=true){
+ if(!Number.isFinite(latDeg)||latDeg<-90||latDeg>90||!Number.isFinite(lonDeg)||lonDeg<-180||lonDeg>180)return false;
+ observerGd={latitude:latDeg*Math.PI/180,longitude:lonDeg*Math.PI/180,height:Number.isFinite(heightKm)?Math.max(-1,Math.min(20,heightKm)):0};
+ groundStation.name=(name||'Observer Station').trim()||'Observer Station';
+ const nameEl=document.getElementById('station-name');if(nameEl)nameEl.value=groundStation.name;
+ syncStationInputs();updateObserverMarker();updateGroundStationSummary();
+ lastPropagationAt=0;passPredictionToken++;updatePositions();if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
+ if(announceIt)announce(`Ground station set to ${groundStation.name}.`);
+ return true;
 }
 function applyGroundStationFromInputs(){
  const lat=Number(document.getElementById('station-lat')?.value),lon=Number(document.getElementById('station-lon')?.value),height=Number(document.getElementById('station-height')?.value);
  const mask=Number(document.getElementById('station-mask')?.value);
- const name=(document.getElementById('station-name')?.value||'Observer Station').trim()||'Observer Station';
+ const name=(document.getElementById('station-name')?.value||groundStation.name||'Observer Station').trim()||'Observer Station';
  const windowHours=Number(document.getElementById('station-window')?.value)||24;
- if(!Number.isFinite(lat)||lat<-90||lat>90||!Number.isFinite(lon)||lon<-180||lon>180||!Number.isFinite(height)||height<-1||height>20||!Number.isFinite(mask)||mask<0||mask>90){
-  announce('Invalid ground station values. Check latitude, longitude, height and elevation mask.',true);return;
- }
+ if(!Number.isFinite(lat)||lat<-90||lat>90||!Number.isFinite(lon)||lon<-180||lon>180||!Number.isFinite(height)||height<-1||height>20||!Number.isFinite(mask)||mask<0||mask>90){announce('Invalid ground station values. Check the advanced station settings.',true);return;}
  observerGd={latitude:lat*Math.PI/180,longitude:lon*Math.PI/180,height};
  groundStation={name,minElevationDeg:mask,windowHours};
- updateObserverMarker();updateGroundStationSummary();lastPropagationAt=0;passPredictionToken++;updatePositions();
- if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
- announce(`Ground station ${name} applied at ${lat.toFixed(4)} degrees latitude, ${lon.toFixed(4)} degrees longitude.`);
+ updateObserverMarker();updateGroundStationSummary();lastPropagationAt=0;passPredictionToken++;updatePositions();if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
+ announce(`Ground station ${name} applied.`);
+}
+function applyEasyStationSettings(){
+ const mask=Number(document.getElementById('station-mask')?.value);const windowHours=Number(document.getElementById('station-window')?.value)||24;
+ if(!Number.isFinite(mask)||mask<0||mask>90){announce('Minimum elevation must be between 0 and 90 degrees.',true);return;}
+ groundStation.minElevationDeg=mask;groundStation.windowHours=windowHours;
+ updateGroundStationSummary();passPredictionToken++;if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);announce(`Pass settings applied: ${mask.toFixed(1)} degree minimum elevation, ${windowHours} hour window.`);
 }
 function useGpsAsGroundStation(){
  if(!navigator.geolocation){announce('This browser does not support location access.',true);return;}
  updateObserverStatus('Requesting GPS…');
  navigator.geolocation.getCurrentPosition(pos=>{
-  observerGd.latitude=pos.coords.latitude*Math.PI/180;
-  observerGd.longitude=pos.coords.longitude*Math.PI/180;
-  observerGd.height=(pos.coords.altitude||0)/1000;
-  const nameEl=document.getElementById('station-name'); if(nameEl&&!nameEl.value.trim())nameEl.value='Current GPS Station';
-  groundStation.name=(nameEl?.value||'Current GPS Station').trim()||'Current GPS Station';
-  syncStationInputs();updateObserverMarker();updateGroundStationSummary();lastPropagationAt=0;passPredictionToken++;updatePositions();
-  if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
-  announce(`Ground station set from GPS at ${pos.coords.latitude.toFixed(4)} degrees latitude, ${pos.coords.longitude.toFixed(4)} degrees longitude.`);
+  const nameEl=document.getElementById('station-name');const currentName=(nameEl?.value||'').trim();
+  const name=(currentName&&currentName!=='Observer Station')?currentName:'My Location';
+  const mask=Number(document.getElementById('station-mask')?.value)||10;const windowHours=Number(document.getElementById('station-window')?.value)||24;
+  groundStation.minElevationDeg=mask;groundStation.windowHours=windowHours;
+  setGroundStationLocation(name,pos.coords.latitude,pos.coords.longitude,(pos.coords.altitude||0)/1000,false);
+  updateObserverStatus(`${pos.coords.latitude.toFixed(4)}°, ${pos.coords.longitude.toFixed(4)}°`);announce('Ground station set to your current location.');
  },()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Ground station was not changed.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000});
+}
+async function searchGroundStationPlace(){
+ const input=document.getElementById('station-place-search'),results=document.getElementById('station-search-results');if(!input||!results)return;
+ const query=input.value.trim();if(query.length<2){results.style.display='none';return;}
+ results.style.display='block';results.innerHTML='<div class="empty-note">Searching places…</div>';
+ try{
+  const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`;
+  const response=await fetch(url);if(!response.ok)throw new Error('Location search unavailable');
+  const data=await response.json();const list=Array.isArray(data.results)?data.results:[];
+  if(!list.length){results.innerHTML='<div class="empty-note">No matching place found. Try a city or town name.</div>';return;}
+  results.innerHTML=list.map((r,i)=>{const area=[r.name,r.admin1,r.country].filter(Boolean).join(', ');return `<button type="button" class="station-result" data-result-index="${i}" role="option"><strong>${escapeHtml(r.name||'Unknown place')}</strong><small>${escapeHtml([r.admin1,r.country].filter(Boolean).join(', ')||'Location')}</small></button>`}).join('');
+  results.querySelectorAll('.station-result').forEach(btn=>btn.addEventListener('click',()=>{
+   const r=list[Number(btn.dataset.resultIndex)];if(!r)return;
+   const name=[r.name,r.country].filter(Boolean).join(', ');
+   const lat=Number(r.latitude),lon=Number(r.longitude),elev=Number(r.elevation);
+   setGroundStationLocation(name,lat,lon,Number.isFinite(elev)?elev/1000:0,false);
+   const mask=Number(document.getElementById('station-mask')?.value)||10,windowHours=Number(document.getElementById('station-window')?.value)||24;groundStation.minElevationDeg=mask;groundStation.windowHours=windowHours;
+   updateGroundStationSummary();results.style.display='none';input.value=name;if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);announce(`Location selected: ${name}.`);
+  }));
+ }catch(error){results.innerHTML='<div class="empty-note">Location search failed. Try “Use my location” or open Advanced settings.</div>';announce('Location search failed.',true)}
+}
+function resetGroundStationLocation(){
+ groundStation={name:'Observer Station',minElevationDeg:Number(document.getElementById('station-mask')?.value)||10,windowHours:Number(document.getElementById('station-window')?.value)||24};
+ observerGd={latitude:0,longitude:0,height:0};syncStationInputs();updateObserverMarker();updateGroundStationSummary();document.getElementById('station-place-search').value='';document.getElementById('station-search-results').style.display='none';passPredictionToken++;if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);announce('Ground station location reset.');
 }
 function lookAnglesAt(sat,date){
  try{
@@ -927,8 +986,12 @@ function updateUtcClock(){const now=new Date();document.getElementById('prov-cur
 function updateTargetUtc(){const el=document.getElementById('prov-target-utc');if(el)el.innerText=currentSimulationDate().toISOString()}
 
 function initEventListeners(){
-  document.getElementById('apply-station').addEventListener('click',applyGroundStationFromInputs);
+  document.getElementById('apply-station').addEventListener('click',applyEasyStationSettings);
   document.getElementById('use-location-station').addEventListener('click',useGpsAsGroundStation);
+  document.getElementById('station-place-search-btn').addEventListener('click',searchGroundStationPlace);
+  document.getElementById('station-place-search').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchGroundStationPlace()}});
+  document.getElementById('station-clear-place').addEventListener('click',resetGroundStationLocation);
+  document.getElementById('station-advanced-toggle').addEventListener('click',()=>{const btn=document.getElementById('station-advanced-toggle'),grid=document.getElementById('station-advanced-grid'),open=grid.classList.toggle('open');btn.setAttribute('aria-expanded',open?'true':'false');btn.innerHTML=`<i class="fas fa-chevron-${open?'down':'right'}"></i> Advanced: station name & coordinates`});
  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',e=>{document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false')});e.currentTarget.classList.add('active');e.currentTarget.setAttribute('aria-selected','true');loadSatelliteData(e.currentTarget.dataset.group)}));
  document.getElementById('search-input').addEventListener('input',e=>{searchQuery=e.target.value;applySearchFilter()});
  document.getElementById('force-refresh-btn').addEventListener('click',()=>loadSatelliteData(currentGroup,true));
