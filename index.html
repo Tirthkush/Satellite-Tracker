@@ -39,6 +39,26 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 @media(max-width:1100px){#header-panel{width:300px}#overhead-panel{width:300px}#detail-panel{width:300px}#provenance-panel,#filters-panel{right:15px;width:300px}#radar-panel{right:15px;width:200px;height:220px}#radar-canvas{width:165px;height:165px}.ui-card{padding:10px}}@media(max-width:900px){#header-panel{width:280px}#overhead-panel{width:280px}#detail-panel{width:280px}#provenance-panel,#filters-panel{width:280px}#radar-panel{right:15px;bottom:15px;width:190px;height:205px}#radar-canvas{width:155px;height:155px}#time-panel{gap:4px}.speed-btn{display:none}}
 @media(max-width:650px){body{overflow:auto;min-height:100vh}#webgl-container{position:fixed;opacity:.38}.ui-card{position:relative;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;transform:none!important;width:calc(100% - 20px)!important;max-height:none!important;margin:10px}#header-panel{margin-top:10px}#filters-panel{max-height:none}#time-panel{flex-wrap:wrap;justify-content:center}.status-banner{position:relative;top:auto;left:auto;transform:none;margin:10px;width:calc(100% - 20px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.spinner{animation:none}}
+
+/* Phase 4 — operational pass prediction controls */
+#station-panel{top:285px;left:365px;width:300px;max-height:285px;overflow:auto}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.station-grid label{font-size:.68rem;color:#8b949e}
+.station-grid input,.station-grid select{display:block;width:100%;margin-top:3px;padding:5px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.72rem}
+.station-actions{display:flex;gap:5px;margin-top:8px}
+.station-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px;border-radius:4px;cursor:pointer;font-size:.68rem}
+.station-actions button:hover{background:#1f6feb;border-color:#388bfd;color:#fff}
+.station-meta{font-size:.63rem;color:#6e7681;margin-top:6px;line-height:1.35}
+.pass-summary{border-top:1px solid #21262d;margin-top:8px;padding-top:7px}
+.pass-summary h4{font-size:.68rem;color:#c9d1d9;text-transform:uppercase;letter-spacing:.4px}
+.pass-card{padding:6px 0;border-bottom:1px solid #21262d;font-size:.68rem}
+.pass-card:last-child{border-bottom:0}
+.pass-time{font-family:monospace;color:#58a6ff}
+.pass-meta{color:#8b949e;margin-top:2px}
+@media(max-width:1100px){#station-panel{left:325px;width:280px}}
+@media(max-width:900px){#station-panel{left:305px;width:260px}}
+@media(max-width:650px){#station-panel{position:relative;left:auto;top:auto;width:calc(100% - 20px)!important;margin:10px}}
+
 </style>
 </head>
 <body>
@@ -96,11 +116,32 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 <div id="catalog-scope" class="catalog-note">Catalog scope will appear after loading.</div>
 </section>
 
+<section id="station-panel" class="ui-card" aria-label="Ground station and pass prediction settings">
+ <h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Ground Station</h3>
+ <div class="station-grid">
+  <label>Station name<input id="station-name" type="text" value="Observer Station" autocomplete="off"></label>
+  <label>Min elevation<input id="station-mask" type="number" min="0" max="90" step="0.1" value="0">°</label>
+  <label>Latitude<input id="station-lat" type="number" min="-90" max="90" step="0.0001" value="0"></label>
+  <label>Longitude<input id="station-lon" type="number" min="-180" max="180" step="0.0001" value="0"></label>
+  <label>Height<input id="station-height" type="number" min="-1" max="20" step="0.001" value="0"> km</label>
+  <label>Prediction window<select id="station-window"><option value="12">12 h</option><option value="24" selected>24 h</option><option value="48">48 h</option></select></label>
+ </div>
+ <div class="station-actions">
+  <button id="apply-station"><i class="fas fa-map-marker-alt"></i> Apply station</button>
+  <button id="use-location-station"><i class="fas fa-crosshairs"></i> Use GPS</button>
+ </div>
+ <div class="station-meta" id="station-summary">Observer station at 0.0000°, 0.0000°, 0.000 km · 0° mask.</div>
+ <div class="pass-summary">
+  <h4 id="pass-title">Next passes</h4>
+  <div id="pass-list"><div class="empty-note">Select a satellite to calculate passes.</div></div>
+ </div>
+</section>
+
 <div id="detail-panel" class="ui-card" role="dialog" aria-label="Selected satellite details" aria-modal="false">
 <button class="close-btn" id="close-detail" aria-label="Close satellite details">&times;</button><div class="detail-kicker">SELECTED SATELLITE — CLICK A BLUE DOT ON THE GLOBE</div><h2 id="sat-name" class="detail-title" tabindex="-1">--</h2>
 <div class="detail-disclosure"><strong>PROPAGATED — SGP4/SDP4.</strong> No observation data is available. Values below are calculated from this object's TLE at <span id="sat-propagated-at" class="utc-clock">--</span>.</div>
 <div class="confidence-line">DATA CONFIDENCE: <span id="sat-confidence">--</span></div>
-<dl class="detail-list"><div class="prov-row"><dt>OBJECT TYPE:</dt><dd id="sat-type">--</dd></div><div class="prov-row"><dt>NORAD ID:</dt><dd id="sat-norad">--</dd></div><div class="prov-row"><dt>Latitude:</dt><dd id="sat-lat">--</dd></div><div class="prov-row"><dt>Longitude:</dt><dd id="sat-lng">--</dd></div><div class="prov-row"><dt>Altitude:</dt><dd id="sat-alt">--</dd></div><div class="prov-row"><dt>Velocity:</dt><dd id="sat-vel">--</dd></div><div class="prov-row"><dt>Azimuth:</dt><dd id="sat-az">--</dd></div><div class="prov-row"><dt>Elevation:</dt><dd id="sat-el">--</dd></div></dl>
+<dl class="detail-list"><div class="prov-row"><dt>OBJECT TYPE:</dt><dd id="sat-type">--</dd></div><div class="prov-row"><dt>NORAD ID:</dt><dd id="sat-norad">--</dd></div><div class="prov-row"><dt>Latitude:</dt><dd id="sat-lat">--</dd></div><div class="prov-row"><dt>Longitude:</dt><dd id="sat-lng">--</dd></div><div class="prov-row"><dt>Altitude:</dt><dd id="sat-alt">--</dd></div><div class="prov-row"><dt>Velocity:</dt><dd id="sat-vel">--</dd></div><div class="prov-row"><dt>Azimuth:</dt><dd id="sat-az">--</dd></div><div class="prov-row"><dt>Elevation:</dt><dd id="sat-el">--</dd></div></dl><div class="detail-disclosure" id="pass-detail-summary"><strong>PASS PREDICTION:</strong> Select a ground station to calculate AOS, maximum elevation, LOS and duration.</div>
 </div>
 
 <div id="overhead-panel" class="ui-card"><h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Passes Above Horizon</h3><div id="overhead-list"><div class="empty-note">Scanning...</div></div></div>
@@ -271,6 +312,8 @@ let selectionMarker=null,selectionHalo=null,selectionRing=null;
 let selectedModel=null,selectedModelReady=false,selectedModelLoading=false,selectedModelTemplate=null;
 let activeSatellites=[],filteredSatellites=[],selectedSatellite=null,orbitPathLine=null;
 let observerGd={latitude:0,longitude:0,height:0};
+let groundStation={name:"Observer Station",minElevationDeg:0,windowHours:24};
+let passPredictionToken=0;
 let simulationOffsetMs=0,timeMultiplier=1,isPaused=false,lastFrameTimestamp=Date.now(),currentGroup='stations',searchQuery='',lastPropagationAt=0,lastAnnouncedStatus='',lastOverheadCount=null,altitudeBand='all',pendingAltitudeFit=false;
 
 function announce(message,showBanner=false){
@@ -358,17 +401,135 @@ function updateObserverMarker(){if(!observerMarker)return;const lat=observerGd.l
 function updateObserverStatus(text){const el=document.getElementById('observer-status');if(el)el.innerText=text}
 
 function initObserverLocation(){
- updateObserverMarker();updateObserverStatus('Location not set');
+ updateObserverMarker();
+ updateObserverStatus('Location not set');
+ syncStationInputs();
+ updateGroundStationSummary();
 }
 function requestObserverLocation(){
  if(!navigator.geolocation){updateObserverStatus('GPS unavailable');announce('This browser does not support location access.',true);return}
- updateObserverStatus('Requesting GPS…');navigator.geolocation.getCurrentPosition(pos=>{observerGd.latitude=pos.coords.latitude*Math.PI/180;observerGd.longitude=pos.coords.longitude*Math.PI/180;observerGd.height=(pos.coords.altitude||0)/1000;updateObserverMarker();const latitude=pos.coords.latitude.toFixed(4),longitude=pos.coords.longitude.toFixed(4);updateObserverStatus(`${latitude}°, ${longitude}°`);announce(`Your location is pinned at latitude ${latitude} degrees, longitude ${longitude} degrees.`);lastPropagationAt=0;updatePositions()},()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Horizon calculations use the default observer location.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000})}
+ updateObserverStatus('Requesting GPS…');navigator.geolocation.getCurrentPosition(pos=>{observerGd.latitude=pos.coords.latitude*Math.PI/180;observerGd.longitude=pos.coords.longitude*Math.PI/180;observerGd.height=(pos.coords.altitude||0)/1000;updateObserverMarker();syncStationInputs();updateGroundStationSummary();passPredictionToken++;const latitude=pos.coords.latitude.toFixed(4),longitude=pos.coords.longitude.toFixed(4);updateObserverStatus(`${latitude}°, ${longitude}°`);announce(`Your location is pinned at latitude ${latitude} degrees, longitude ${longitude} degrees.`);lastPropagationAt=0;updatePositions();if(selectedSatellite)calculateAndRenderPasses(selectedSatellite)},()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Horizon calculations use the default observer location.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000})}
 
+
+function syncStationInputs(){
+ const lat=document.getElementById('station-lat'),lon=document.getElementById('station-lon'),height=document.getElementById('station-height');
+ if(lat)lat.value=(observerGd.latitude*180/Math.PI).toFixed(4);
+ if(lon)lon.value=(observerGd.longitude*180/Math.PI).toFixed(4);
+ if(height)height.value=observerGd.height.toFixed(3);
+}
+function updateGroundStationSummary(){
+ const el=document.getElementById('station-summary');if(!el)return;
+ const lat=observerGd.latitude*180/Math.PI,lon=observerGd.longitude*180/Math.PI;
+ el.textContent=`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}°, ${observerGd.height.toFixed(3)} km · ${groundStation.minElevationDeg.toFixed(1)}° mask · ${groundStation.windowHours} h`;
+ const obs=document.getElementById('observer-status');
+ if(obs)obs.textContent=`${groundStation.name} · ${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+}
+function applyGroundStationFromInputs(){
+ const lat=Number(document.getElementById('station-lat')?.value),lon=Number(document.getElementById('station-lon')?.value),height=Number(document.getElementById('station-height')?.value);
+ const mask=Number(document.getElementById('station-mask')?.value);
+ const name=(document.getElementById('station-name')?.value||'Observer Station').trim()||'Observer Station';
+ const windowHours=Number(document.getElementById('station-window')?.value)||24;
+ if(!Number.isFinite(lat)||lat<-90||lat>90||!Number.isFinite(lon)||lon<-180||lon>180||!Number.isFinite(height)||height<-1||height>20||!Number.isFinite(mask)||mask<0||mask>90){
+  announce('Invalid ground station values. Check latitude, longitude, height and elevation mask.',true);return;
+ }
+ observerGd={latitude:lat*Math.PI/180,longitude:lon*Math.PI/180,height};
+ groundStation={name,minElevationDeg:mask,windowHours};
+ updateObserverMarker();updateGroundStationSummary();lastPropagationAt=0;passPredictionToken++;updatePositions();
+ if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
+ announce(`Ground station ${name} applied at ${lat.toFixed(4)} degrees latitude, ${lon.toFixed(4)} degrees longitude.`);
+}
+function useGpsAsGroundStation(){
+ if(!navigator.geolocation){announce('This browser does not support location access.',true);return;}
+ updateObserverStatus('Requesting GPS…');
+ navigator.geolocation.getCurrentPosition(pos=>{
+  observerGd.latitude=pos.coords.latitude*Math.PI/180;
+  observerGd.longitude=pos.coords.longitude*Math.PI/180;
+  observerGd.height=(pos.coords.altitude||0)/1000;
+  const nameEl=document.getElementById('station-name'); if(nameEl&&!nameEl.value.trim())nameEl.value='Current GPS Station';
+  groundStation.name=(nameEl?.value||'Current GPS Station').trim()||'Current GPS Station';
+  syncStationInputs();updateObserverMarker();updateGroundStationSummary();lastPropagationAt=0;passPredictionToken++;updatePositions();
+  if(selectedSatellite)calculateAndRenderPasses(selectedSatellite);
+  announce(`Ground station set from GPS at ${pos.coords.latitude.toFixed(4)} degrees latitude, ${pos.coords.longitude.toFixed(4)} degrees longitude.`);
+ },()=>{updateObserverStatus('Permission unavailable');announce('Location permission was not granted. Ground station was not changed.',true)},{enableHighAccuracy:true,timeout:12000,maximumAge:300000});
+}
+function lookAnglesAt(sat,date){
+ try{
+  const pv=satellite.propagate(sat.satrec,date),pos=pv?.position;
+  if(!pos||typeof pos==='boolean'||!Number.isFinite(pos.x))return null;
+  const gmst=satellite.gstime(date),ecf=satellite.eciToEcf(pos,gmst),look=satellite.ecfToLookAngles(observerGd,ecf);
+  return {elevation:look.elevation*180/Math.PI,azimuth:look.azimuth*180/Math.PI,position:pos};
+ }catch(e){return null}
+}
+function refineElevationCrossing(sat,a,b,target){
+ let lo=a,hi=b,la=lookAnglesAt(sat,lo),lb=lookAnglesAt(sat,hi);
+ if(!la||!lb)return b;
+ for(let i=0;i<14;i++){
+  const mid=new Date((lo.getTime()+hi.getTime())/2),lm=lookAnglesAt(sat,mid);if(!lm)break;
+  if((la.elevation-target)*(lm.elevation-target)<=0){hi=mid;lb=lm}else{lo=mid;la=lm}
+ }
+ return new Date((lo.getTime()+hi.getTime())/2);
+}
+function predictPasses(sat){
+ const start=new Date(currentSimulationDate().getTime()-2*3600000);
+ const end=new Date(currentSimulationDate().getTime()+groundStation.windowHours*3600000);
+ const step=30000,target=groundStation.minElevationDeg,passes=[];
+ let prevDate=start,prev=lookAnglesAt(sat,prevDate),current=null,maxEl=-Infinity,maxDate=null;
+ for(let t=start.getTime()+step;t<=end.getTime();t+=step){
+  const date=new Date(t),cur=lookAnglesAt(sat,date);
+  if(!cur){prevDate=date;prev=cur;continue}
+  const prevAbove=prev&&prev.elevation>=target,curAbove=cur.elevation>=target;
+  if(!prevAbove&&curAbove){
+   const aos=refineElevationCrossing(sat,prevDate,date,target);
+   current={aos,maxElevationDeg:cur.elevation,maxElevationTimeUtc:date,los:null};
+   maxEl=cur.elevation;maxDate=date;
+  }else if(current){
+   if(cur.elevation>maxEl){maxEl=cur.elevation;maxDate=date;current.maxElevationDeg=cur.elevation;current.maxElevationTimeUtc=date;}
+   if(prevAbove&&!curAbove){
+    current.los=refineElevationCrossing(sat,prevDate,date,target);
+    current.maxElevationDeg=maxEl;current.maxElevationTimeUtc=maxDate;
+    current.durationSec=(current.los-current.aos)/1000;
+    passes.push(current);current=null;maxEl=-Infinity;maxDate=null;
+   }
+  }
+  prevDate=date;prev=cur;
+ }
+ if(current){
+  current.maxElevationDeg=maxEl;current.maxElevationTimeUtc=maxDate;current.los=end;current.durationSec=(end-current.aos)/1000;passes.push(current);
+ }
+ return passes.filter(p=>p.los>=currentSimulationDate() && p.aos<=end).slice(0,8);
+}
+function formatPassDuration(sec){
+ const s=Math.max(0,Math.round(sec||0)),m=Math.floor(s/60),r=s%60;
+ return m?`${m}m ${String(r).padStart(2,'0')}s`:`${r}s`;
+}
+function renderPassList(passes,sat){
+ const el=document.getElementById('pass-list');if(!el)return;
+ if(!passes.length){el.innerHTML='<div class="empty-note">No pass above the selected elevation mask in the prediction window.</div>';return}
+ el.innerHTML=passes.map((p,i)=>`<div class="pass-card"><div><strong>Pass ${i+1}</strong> · <span class="pass-time">${formatUtc(p.aos)}</span> → <span class="pass-time">${formatUtc(p.los)}</span></div><div class="pass-meta">Max ${p.maxElevationDeg.toFixed(1)}° at ${formatUtc(p.maxElevationTimeUtc)} · Duration ${formatPassDuration(p.durationSec)}</div></div>`).join('');
+}
+function calculateAndRenderPasses(sat){
+ const token=++passPredictionToken;
+ const el=document.getElementById('pass-list');
+ if(el)el.innerHTML='<div class="empty-note">Calculating next passes…</div>';
+ setTimeout(()=>{
+  if(token!==passPredictionToken||!selectedSatellite||selectedSatellite.noradId!==sat.noradId)return;
+  const passes=predictPasses(sat);
+  renderPassList(passes,sat);
+  const summary=document.getElementById('pass-detail-summary');
+  if(summary){
+   const first=passes[0];
+   summary.innerHTML=first
+    ? `<strong>NEXT PASS:</strong> AOS ${formatUtc(first.aos)} · MAX ${first.maxElevationDeg.toFixed(1)}° at ${formatUtc(first.maxElevationTimeUtc)} · LOS ${formatUtc(first.los)} · Duration ${formatPassDuration(first.durationSec)}.`
+    : `<strong>PASS PREDICTION:</strong> No pass above ${groundStation.minElevationDeg.toFixed(1)}° within the next ${groundStation.windowHours} hours.`;
+  }
+ },20);
+}
 function clearSelection(){
- selectedSatellite=null;
+ passPredictionToken++;selectedSatellite=null;
  if(selectedModel)selectedModel.visible=false;
  const panel=document.getElementById('detail-panel');
  if(panel)panel.style.display='none';
+  const passList=document.getElementById('pass-list');if(passList)passList.innerHTML='<div class="empty-note">Select a satellite to calculate passes.</div>';
  if(orbitPathLine){
   scene.remove(orbitPathLine);
   orbitPathLine.geometry.dispose();
@@ -717,7 +878,7 @@ function updateOverheadUI(overhead){
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function escapeAttr(s){return escapeHtml(s)}
-function selectSatelliteByNorad(id){const sat=activeSatellites.find(s=>s.noradId===String(id));if(!sat)return;selectedSatellite=sat;document.getElementById('detail-panel').style.display='block';rebuildSatellitePointsMesh();updateSelectedModel();lastPropagationAt=0;updatePositions();updateSelectionVisual();document.getElementById('sat-name').focus();announce(`Selected ${sat.name}, NORAD ${sat.noradId}.`)}
+function selectSatelliteByNorad(id){const sat=activeSatellites.find(s=>s.noradId===String(id));if(!sat)return;selectedSatellite=sat;document.getElementById('detail-panel').style.display='block';rebuildSatellitePointsMesh();updateSelectedModel();lastPropagationAt=0;updatePositions();updateSelectionVisual();document.getElementById('sat-name').focus();calculateAndRenderPasses(sat);announce(`Selected ${sat.name}, NORAD ${sat.noradId}.`)}
 
 function renderRadar(overhead){
  const canvas=document.getElementById('radar-canvas'),ctx=canvas.getContext('2d'),r=canvas.width/2;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#30363d';ctx.lineWidth=1;ctx.beginPath();ctx.arc(r,r,r-2,0,2*Math.PI);ctx.arc(r,r,r*.66,0,2*Math.PI);ctx.arc(r,r,r*.33,0,2*Math.PI);ctx.stroke();
@@ -762,6 +923,8 @@ function updateUtcClock(){const now=new Date();document.getElementById('prov-cur
 function updateTargetUtc(){const el=document.getElementById('prov-target-utc');if(el)el.innerText=currentSimulationDate().toISOString()}
 
 function initEventListeners(){
+  document.getElementById('apply-station').addEventListener('click',applyGroundStationFromInputs);
+  document.getElementById('use-location-station').addEventListener('click',useGpsAsGroundStation);
  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',e=>{document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false')});e.currentTarget.classList.add('active');e.currentTarget.setAttribute('aria-selected','true');loadSatelliteData(e.currentTarget.dataset.group)}));
  document.getElementById('search-input').addEventListener('input',e=>{searchQuery=e.target.value;applySearchFilter()});
  document.getElementById('force-refresh-btn').addEventListener('click',()=>loadSatelliteData(currentGroup,true));
