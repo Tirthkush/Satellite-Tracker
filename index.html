@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SatTracker 3D — Phase 3 Live Tracker</title>
+<title>SatTracker 3D — Phase 4 Operational Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -41,23 +41,25 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.spinner{animation:none}}
 
 /* Phase 4 — operational pass prediction controls */
-#station-panel{top:285px;left:365px;width:300px;max-height:285px;overflow:auto}
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-.station-grid label{font-size:.68rem;color:#8b949e}
-.station-grid input,.station-grid select{display:block;width:100%;margin-top:3px;padding:5px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.72rem}
-.station-actions{display:flex;gap:5px;margin-top:8px}
-.station-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px;border-radius:4px;cursor:pointer;font-size:.68rem}
+#station-panel{top:15px;left:355px;width:315px;max-height:275px;overflow:auto}
+#station-panel h3{font-size:.78rem!important;letter-spacing:.5px;margin-bottom:6px}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.station-grid label{font-size:.64rem;color:#8b949e;line-height:1.1}
+.station-grid input,.station-grid select{display:block;width:100%;height:27px;margin-top:3px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#c9d1d9;font-size:.69rem}
+.station-actions{display:flex;gap:5px;margin-top:7px}
+.station-actions button{flex:1;background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:5px;border-radius:4px;cursor:pointer;font-size:.66rem}
 .station-actions button:hover{background:#1f6feb;border-color:#388bfd;color:#fff}
-.station-meta{font-size:.63rem;color:#6e7681;margin-top:6px;line-height:1.35}
-.pass-summary{border-top:1px solid #21262d;margin-top:8px;padding-top:7px}
-.pass-summary h4{font-size:.68rem;color:#c9d1d9;text-transform:uppercase;letter-spacing:.4px}
-.pass-card{padding:6px 0;border-bottom:1px solid #21262d;font-size:.68rem}
-.pass-card:last-child{border-bottom:0}
+.station-meta{font-size:.62rem;color:#8b949e;margin-top:6px;line-height:1.3}
+.pass-summary{border-top:1px solid #21262d;margin-top:7px;padding-top:6px}
+.pass-summary h4{font-size:.68rem;color:#c9d1d9;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+#pass-list{max-height:105px;overflow-y:auto;padding-right:2px}
+.pass-card{padding:5px 6px;border:1px solid #30363d;background:rgba(1,4,9,.45);border-radius:5px;margin-bottom:4px;font-size:.64rem;line-height:1.3}
 .pass-time{font-family:monospace;color:#58a6ff}
 .pass-meta{color:#8b949e;margin-top:2px}
-@media(max-width:1100px){#station-panel{left:325px;width:280px}}
-@media(max-width:900px){#station-panel{left:305px;width:260px}}
-@media(max-width:650px){#station-panel{position:relative;left:auto;top:auto;width:calc(100% - 20px)!important;margin:10px}}
+@media(max-width:1100px){#station-panel{left:325px;width:285px}}
+@media(max-width:900px){#station-panel{left:295px;width:270px}}
+@media(max-width:650px){#station-panel{position:relative;left:auto;top:auto;width:calc(100% - 20px)!important;margin:10px;max-height:none}}
+
 
 </style>
 </head>
@@ -117,7 +119,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 </section>
 
 <section id="station-panel" class="ui-card" aria-label="Ground station and pass prediction settings">
- <h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Ground Station</h3>
+ <h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-broadcast-tower"></i> Ground Station</span><span id="station-target" style="font-size:.62rem;color:#58a6ff;font-weight:400">NO TARGET</span></h3>
  <div class="station-grid">
   <label>Station name<input id="station-name" type="text" value="Observer Station" autocomplete="off"></label>
   <label>Min elevation<input id="station-mask" type="number" min="0" max="90" step="0.1" value="0">°</label>
@@ -130,7 +132,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
   <button id="apply-station"><i class="fas fa-map-marker-alt"></i> Apply station</button>
   <button id="use-location-station"><i class="fas fa-crosshairs"></i> Use GPS</button>
  </div>
- <div class="station-meta" id="station-summary">Observer station at 0.0000°, 0.0000°, 0.000 km · 0° mask.</div>
+ <div class="station-meta" id="station-summary">Observer Station · 0.0000°, 0.0000° · 0.000 km · 0° mask · 24 h.</div>
  <div class="pass-summary">
   <h4 id="pass-title">Next passes</h4>
   <div id="pass-list"><div class="empty-note">Select a satellite to calculate passes.</div></div>
@@ -509,6 +511,7 @@ function renderPassList(passes,sat){
 }
 function calculateAndRenderPasses(sat){
  const token=++passPredictionToken;
+ const target=document.getElementById('station-target');if(target)target.textContent=sat?`NORAD ${sat.noradId}`:'NO TARGET';
  const el=document.getElementById('pass-list');
  if(el)el.innerHTML='<div class="empty-note">Calculating next passes…</div>';
  setTimeout(()=>{
@@ -526,6 +529,7 @@ function calculateAndRenderPasses(sat){
 }
 function clearSelection(){
  passPredictionToken++;selectedSatellite=null;
+ const target=document.getElementById('station-target');if(target)target.textContent='NO TARGET';
  if(selectedModel)selectedModel.visible=false;
  const panel=document.getElementById('detail-panel');
  if(panel)panel.style.display='none';
