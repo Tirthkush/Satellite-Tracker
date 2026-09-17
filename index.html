@@ -448,6 +448,322 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 }
 
 </style>
+
+
+
+
+<style id="phase45-final-clean-layout">
+/* =========================================================
+   PHASE 4.5 FINAL CLEAN LAYOUT
+   One geometric layout. No panel is positioned on top of another.
+   The globe has its own viewport; the bottom dock is separate.
+   ========================================================= */
+:root{
+  --L: 320px;
+  --R: 320px;
+  --G: 12px;
+  --T: 52px;
+  --D: 154px;
+  --edge: 14px;
+}
+html,body{width:100%;height:100%;overflow:hidden!important}
+body{position:relative;background:#02060d}
+
+/* ---------- CENTRAL GLOBE VIEWPORT ---------- */
+#webgl-container{
+  position:absolute!important;
+  left:calc(var(--L) + var(--G))!important;
+  right:calc(var(--R) + var(--G))!important;
+  top:0!important;
+  bottom:calc(var(--D) + var(--T) + 8px)!important;
+  width:auto!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  z-index:1!important;
+  overflow:hidden!important;
+}
+#webgl-container canvas{display:block!important;width:100%!important;height:100%!important}
+
+/* ---------- LEFT RAIL: fixed vertical rhythm ---------- */
+#header-panel{
+  position:absolute!important;
+  left:var(--edge)!important;top:var(--edge)!important;
+  width:calc(var(--L) - var(--edge)*2)!important;
+  height:292px!important;max-height:292px!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  z-index:20!important;transform:none!important;
+}
+#station-panel{
+  position:absolute!important;
+  left:var(--edge)!important;top:318px!important;
+  width:calc(var(--L) - var(--edge)*2)!important;
+  height:calc(100vh - 318px - 116px)!important;
+  min-height:140px!important;max-height:none!important;
+  box-sizing:border-box!important;overflow:auto!important;
+  z-index:20!important;transform:none!important;
+}
+#overhead-panel{
+  position:absolute!important;
+  left:var(--edge)!important;bottom:calc(var(--T) + 8px)!important;
+  width:calc(var(--L) - var(--edge)*2)!important;
+  height:96px!important;max-height:96px!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  z-index:21!important;transform:none!important;
+}
+#overhead-list{max-height:60px!important;overflow-y:auto!important}
+
+/* ---------- RIGHT RAIL ---------- */
+#provenance-panel{
+  position:absolute!important;
+  right:var(--edge)!important;top:var(--edge)!important;
+  width:calc(var(--R) - var(--edge)*2)!important;
+  height:154px!important;max-height:154px!important;
+  box-sizing:border-box!important;overflow:auto!important;
+  z-index:20!important;transform:none!important;
+}
+#filters-panel{
+  position:absolute!important;
+  right:var(--edge)!important;top:180px!important;
+  width:calc(var(--R) - var(--edge)*2)!important;
+  height:174px!important;max-height:174px!important;
+  box-sizing:border-box!important;overflow:auto!important;
+  z-index:20!important;transform:none!important;
+}
+#detail-panel{
+  position:absolute!important;
+  right:var(--edge)!important;top:366px!important;
+  width:calc(var(--R) - var(--edge)*2)!important;
+  height:calc(100vh - 366px - 16px)!important;
+  min-height:150px!important;max-height:none!important;
+  box-sizing:border-box!important;overflow:auto!important;
+  z-index:20!important;transform:none!important;
+}
+
+/* ---------- BOTTOM DOCK: entirely outside globe viewport ---------- */
+#radar-panel{
+  position:absolute!important;
+  left:calc(var(--L) + var(--G))!important;
+  bottom:calc(var(--T) + 8px)!important;
+  width:180px!important;height:var(--D)!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  z-index:25!important;transform:none!important;
+}
+#radar-panel h3{margin:0!important;font-size:.64rem!important;line-height:1.15!important}
+#radar-canvas{display:block!important;width:118px!important;height:118px!important;margin:5px auto 0!important}
+
+#pass-panel{
+  position:absolute!important;
+  left:calc(var(--L) + var(--G) + 192px)!important;
+  right:calc(var(--R) + var(--G))!important;
+  bottom:calc(var(--T) + 8px)!important;
+  width:auto!important;height:var(--D)!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  z-index:25!important;transform:none!important;
+}
+#pass-panel .pass-summary{height:auto!important;min-height:0!important}
+#pass-panel h4{margin:0 0 5px!important;font-size:.68rem!important}
+#pass-panel .pass-explainer{font-size:.57rem!important;line-height:1.25!important;margin:0 0 5px!important;padding:4px 6px!important}
+#pass-panel .pass-hero{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;margin-bottom:5px!important}
+#pass-panel .pass-metric{min-width:0!important;padding:5px 4px!important}
+#pass-panel .pass-metric-label{font-size:.51rem!important}
+#pass-panel .pass-metric-value{font-size:.68rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#pass-panel .pass-metric-sub{font-size:.46rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#pass-panel #pass-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4px!important;max-height:43px!important;overflow:auto!important;margin:0!important}
+#pass-panel .pass-card{margin:0!important;padding:4px 6px!important;font-size:.50rem!important;line-height:1.15!important;min-width:0!important}
+#pass-technical-help{
+  position:static!important;display:block!important;width:100%!important;
+  margin:4px 0 0!important;font-size:.52rem!important;
+}
+#pass-technical-help summary{cursor:pointer!important;padding:3px 0!important}
+#pass-technical-help .expert-copy{max-height:85px!important;overflow:auto!important}
+
+/* ---------- TIME BAR: its own strip ---------- */
+#time-panel{
+  position:absolute!important;
+  left:50%!important;bottom:8px!important;
+  transform:translateX(-50%)!important;
+  z-index:40!important;height:var(--T)!important;
+  box-sizing:border-box!important;display:flex!important;align-items:center!important;
+}
+
+/* ---------- CLEANER PRODUCT TYPOGRAPHY ---------- */
+#header-panel .distance-title{font-size:.66rem!important}
+#header-panel .distance-note{font-size:.56rem!important}
+#header-panel .tab-btn,#header-panel .distance-btn{white-space:nowrap!important}
+
+/* ---------- 1250px–901px: shrink, never overlap ---------- */
+@media (max-width:1250px) and (min-width:901px){
+  :root{--L:292px;--R:292px;--D:146px;--T:48px}
+  #header-panel{height:280px!important;max-height:280px!important}
+  #station-panel{top:306px!important;height:calc(100vh - 306px - 108px)!important}
+  #overhead-panel{height:88px!important;max-height:88px!important}
+  #provenance-panel{height:142px!important;max-height:142px!important}
+  #filters-panel{top:166px!important;height:164px!important;max-height:164px!important}
+  #detail-panel{top:342px!important;height:calc(100vh - 342px - 14px)!important}
+  #radar-panel{width:158px!important;height:var(--D)!important}
+  #radar-canvas{width:105px!important;height:105px!important}
+  #pass-panel{left:calc(var(--L) + var(--G) + 170px)!important}
+}
+
+/* ---------- Short desktop viewport: compress content, still no overlap ---------- */
+@media (min-width:901px) and (max-height:720px){
+  :root{--D:140px;--T:46px}
+  #header-panel{height:270px!important;max-height:270px!important}
+  #station-panel{top:296px!important;height:calc(100vh - 296px - 106px)!important;min-height:128px!important}
+  #overhead-panel{height:84px!important;max-height:84px!important}
+  #overhead-list{max-height:48px!important}
+  #provenance-panel{height:136px!important;max-height:136px!important}
+  #filters-panel{top:158px!important;height:150px!important;max-height:150px!important}
+  #detail-panel{top:320px!important;height:calc(100vh - 320px - 12px)!important;min-height:130px!important}
+  #pass-panel{left:calc(var(--L) + var(--G) + 174px)!important}
+  #pass-panel #pass-list{max-height:36px!important}
+  #radar-canvas{width:98px!important;height:98px!important}
+}
+
+/* ---------- Mobile/tablet: normal document flow ---------- */
+@media(max-width:900px){
+  html,body{height:auto!important;min-height:100%!important;overflow:auto!important}
+  #webgl-container{position:fixed!important;inset:0!important;opacity:.18!important;left:0!important;right:0!important;bottom:0!important}
+  .ui-card{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:calc(100% - 24px)!important;height:auto!important;max-height:none!important;margin:10px 12px!important;transform:none!important}
+  #header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel,#radar-panel,#pass-panel{width:calc(100% - 24px)!important;height:auto!important;min-height:0!important;max-height:none!important}
+  #header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel,#radar-panel,#pass-panel{margin:10px 12px!important}
+  #station-panel,#detail-panel{overflow:visible!important}
+  #radar-panel,#pass-panel{min-height:180px!important}
+  #pass-panel #pass-list{max-height:150px!important;grid-template-columns:1fr!important}
+  #time-panel{position:sticky!important;left:auto!important;bottom:8px!important;transform:none!important;width:max-content!important;max-width:calc(100% - 20px)!important;margin:8px auto!important}
+}
+</style>
+
+<style id="FINAL_GEOMETRY_OVERRIDE">
+/* FINAL GEOMETRY OVERRIDE — one coordinate system only */
+:root{
+  --rail-left:350px;
+  --rail-right:350px;
+  --dock-h:168px;
+  --time-h:44px;
+  --gap:12px;
+}
+html,body{width:100%;height:100%;margin:0;overflow:hidden!important;background:#02060d}
+body{position:relative!important}
+
+/* CENTER: globe occupies a genuinely separate rectangle. */
+#webgl-container{
+  position:absolute!important;
+  left:var(--rail-left)!important;
+  right:var(--rail-right)!important;
+  top:0!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 20px)!important;
+  width:auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+  opacity:1!important;
+  z-index:1!important;
+}
+#webgl-container canvas{width:100%!important;height:100%!important;display:block!important}
+
+/* LEFT RAIL: header -> station -> above-you, with explicit non-overlapping gaps. */
+#header-panel{
+  position:absolute!important;left:12px!important;top:12px!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:292px!important;max-height:292px!important;
+  margin:0!important;overflow:hidden!important;box-sizing:border-box!important;
+  z-index:20!important;
+}
+#station-panel{
+  position:absolute!important;left:12px!important;top:316px!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:calc(100vh - 316px - var(--dock-h) - var(--time-h) - 20px - 104px - 12px)!important;
+  min-height:0!important;max-height:none!important;
+  margin:0!important;overflow:auto!important;box-sizing:border-box!important;
+  z-index:20!important;
+}
+#overhead-panel{
+  position:absolute!important;left:12px!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 20px)!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:104px!important;max-height:104px!important;
+  margin:0!important;overflow:hidden!important;box-sizing:border-box!important;
+  z-index:20!important;
+}
+
+/* RIGHT RAIL: each panel has an explicit lane. */
+#provenance-panel{
+  position:absolute!important;right:12px!important;top:12px!important;
+  width:calc(var(--rail-right) - 24px)!important;height:178px!important;
+  margin:0!important;overflow:hidden!important;box-sizing:border-box!important;z-index:20!important;
+}
+#filters-panel{
+  position:absolute!important;right:12px!important;top:202px!important;
+  width:calc(var(--rail-right) - 24px)!important;height:188px!important;
+  margin:0!important;overflow:auto!important;box-sizing:border-box!important;z-index:20!important;
+}
+#detail-panel{
+  position:absolute!important;right:12px!important;top:402px!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 20px)!important;
+  width:calc(var(--rail-right) - 24px)!important;min-height:120px!important;
+  margin:0!important;overflow:auto!important;box-sizing:border-box!important;z-index:20!important;
+}
+
+/* CENTER BOTTOM DOCK: both panels have the same top/bottom and never cover Earth. */
+#radar-panel{
+  position:absolute!important;left:calc(var(--rail-left) + var(--gap))!important;
+  bottom:calc(var(--time-h) + 8px)!important;
+  width:180px!important;height:var(--dock-h)!important;
+  margin:0!important;padding:10px!important;box-sizing:border-box!important;
+  overflow:hidden!important;z-index:25!important;
+}
+#pass-panel{
+  position:absolute!important;
+  left:calc(var(--rail-left) + 180px + 2 * var(--gap))!important;
+  right:calc(var(--rail-right) + var(--gap))!important;
+  bottom:calc(var(--time-h) + 8px)!important;
+  width:auto!important;height:var(--dock-h)!important;
+  margin:0!important;padding:10px!important;box-sizing:border-box!important;
+  overflow:hidden!important;z-index:25!important;
+}
+#radar-canvas{display:block!important;width:126px!important;height:126px!important;margin:6px auto 0!important}
+#pass-panel .pass-summary{height:100%!important;min-height:0!important}
+#pass-panel #pass-list{max-height:48px!important;overflow:auto!important}
+#pass-technical-help{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;width:auto!important;margin:4px 0 0!important}
+#pass-technical-help .expert-copy{position:static!important;max-height:70px!important;overflow:auto!important}
+
+/* TIME BAR has its own strip below the dock. */
+#time-panel{
+  position:absolute!important;left:50%!important;bottom:8px!important;
+  transform:translateX(-50%)!important;z-index:40!important;
+  height:var(--time-h)!important;margin:0!important;box-sizing:border-box!important;
+  display:flex!important;align-items:center!important;white-space:nowrap!important;
+}
+
+/* Medium desktop: still no overlap; simply reduce rail widths. */
+@media (max-width:1250px) and (min-width:901px){
+  :root{--rail-left:300px;--rail-right:300px;--dock-h:150px;--time-h:42px}
+  #header-panel{height:276px!important;max-height:276px!important}
+  #station-panel{top:288px!important;height:calc(100vh - 288px - var(--dock-h) - var(--time-h) - 20px - 92px - 12px)!important;min-height:120px!important}
+  #overhead-panel{height:92px!important;max-height:92px!important}
+  #provenance-panel{height:160px!important}
+  #filters-panel{top:182px!important;height:176px!important}
+  #detail-panel{top:368px!important}
+  #radar-panel{width:150px!important}
+  #radar-canvas{width:108px!important;height:108px!important}
+  #pass-panel{left:calc(var(--rail-left) + 150px + 2 * var(--gap))!important}
+}
+
+/* Small screens: normal document flow; no absolute rail collisions. */
+@media(max-width:900px){
+  html,body{height:auto!important;min-height:100%;overflow:auto!important}
+  #webgl-container{position:fixed!important;inset:0!important;opacity:.22!important;z-index:0!important}
+  #header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel,#radar-panel,#pass-panel{
+    position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+    width:calc(100% - 24px)!important;height:auto!important;min-height:0!important;max-height:none!important;
+    margin:12px!important;transform:none!important;overflow:visible!important;
+  }
+  #radar-panel,#pass-panel{min-height:180px!important}
+  #pass-panel #pass-list{max-height:150px!important;grid-template-columns:1fr!important}
+  #time-panel{position:fixed!important;left:50%!important;bottom:8px!important}
+}
+</style>
 </head>
 <body>
 <div id="webgl-container" aria-hidden="true"></div>
@@ -456,9 +772,9 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 
 <div id="header-panel" class="ui-card">
 <h1><i class="fas fa-globe-americas"></i> SatTracker 3D</h1>
-<p style="font-size:.72rem;color:#8b949e;line-height:1.35">Select a catalog, refine it with filters, then click any visible satellite on the globe for its propagated details.</p>
-<div class="search-box"><input type="text" id="search-input" placeholder="Search satellite or NORAD ID..." autocomplete="off"></div>
-<button id="locate-me" class="location-btn"><i class="fas fa-crosshairs"></i> Pin my location on the globe</button>
+<p style="font-size:.72rem;color:#8b949e;line-height:1.35">Choose what you want to track, then click a satellite on the globe. Technical details are available when you need them.</p>
+<div class="search-box"><input type="text" id="search-input" placeholder="Find a satellite by name or ID…" autocomplete="off"></div>
+<button id="locate-me" class="location-btn"><i class="fas fa-crosshairs"></i> Show my location on the globe</button>
 <div class="category-tabs" role="tablist" aria-label="Satellite catalog">
 <button class="tab-btn active" role="tab" aria-selected="true" data-group="stations">Stations</button><button class="tab-btn" role="tab" aria-selected="false" data-group="starlink">Starlink</button><button class="tab-btn" role="tab" aria-selected="false" data-group="visual">Brightest</button><button class="tab-btn" role="tab" aria-selected="false" data-group="active">All Active</button><button class="tab-btn" role="tab" aria-selected="false" data-group="fengyun-1c-debris">FY-1C Debris</button>
 </div>
@@ -471,12 +787,13 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 <button class="distance-btn" data-alt-band="far">Far / GEO+</button>
 </div>
 <div class="distance-note">LEO &lt; 2,000 km · MEO 2,000–35,786 km · Far / GEO+ ≥ 35,786 km</div>
+<details class="expert-details"><summary>Technical orbit bands</summary><div class="expert-copy"><b>LEO</b> = below 2,000 km · <b>MEO</b> = 2,000–35,786 km · <b>Far / GEO+</b> = 35,786 km and above. These are altitude categories used to organize the catalogue.</div></details>
 </div>
 <div id="search-results" role="listbox" aria-label="Satellite search results"></div>
 </div>
 
 <div id="provenance-panel" class="ui-card" aria-live="polite">
-<h3>Data Pipeline <i class="fas fa-sync-alt refresh-btn" id="force-refresh-btn" title="Force Network Refresh" aria-label="Force Network Refresh"></i></h3>
+<h3>Data health <span class="plain-badge">Live / calculated</span> <i class="fas fa-sync-alt refresh-btn" id="force-refresh-btn" title="Force Network Refresh" aria-label="Force Network Refresh"></i></h3>
 <div class="prov-row"><span class="prov-label">CURRENT UTC:</span><span class="prov-value utc-clock" id="prov-current-utc">--</span></div>
 <div class="prov-row"><span class="prov-label">OBSERVER:</span><span class="prov-value" id="observer-status">Location not set</span></div>
 <div class="prov-row"><span class="prov-label">SOURCE:</span><span class="prov-value" id="prov-source">--</span></div>
@@ -496,19 +813,25 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
 </div>
 
 <section id="filters-panel" class="ui-card" aria-label="Catalog filters">
-<h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Catalog &amp; filters</h3>
-<div class="filter-grid"><label>Min altitude (km)<input id="filter-alt-min" type="number" min="0" placeholder="Any"></label><label>Max altitude (km)<input id="filter-alt-max" type="number" min="0" placeholder="Any"></label><label>Min inclination (°)<input id="filter-inc-min" type="number" min="0" max="180" placeholder="Any"></label><label>Max inclination (°)<input id="filter-inc-max" type="number" min="0" max="180" placeholder="Any"></label></div>
-<div class="filter-section"><h4>Visibility</h4><label class="check-row"><input id="filter-above" type="checkbox"> Above horizon</label><label class="check-row">Minimum elevation <input id="filter-elevation" type="number" min="0" max="90" value="0" style="width:55px">°</label></div>
-<div class="filter-section"><h4>Data confidence</h4><label class="check-row"><input class="confidence-filter" type="checkbox" value="NOMINAL" checked> Nominal</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="DEGRADED" checked> Degraded</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="STALE" checked> Stale</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="DO NOT USE" checked> Do not use</label></div>
+<h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Find satellites</h3>
+<div class="filter-section simple-filter">
+  <h4>Quick visibility</h4>
+  <label class="check-row"><input id="filter-above" type="checkbox"> Show only satellites above me</label>
+  <label class="check-row">Minimum visibility <input id="filter-elevation" type="number" min="0" max="90" value="0" style="width:55px">°</label>
+</div>
+<details class="expert-details filter-expert"><summary>Advanced filters &amp; data quality</summary>
+  <div class="filter-grid"><label>Min altitude (km)<input id="filter-alt-min" type="number" min="0" placeholder="Any"></label><label>Max altitude (km)<input id="filter-alt-max" type="number" min="0" placeholder="Any"></label><label>Min inclination (°)<input id="filter-inc-min" type="number" min="0" max="180" placeholder="Any"></label><label>Max inclination (°)<input id="filter-inc-max" type="number" min="0" max="180" placeholder="Any"></label></div>
+  <div class="filter-section"><h4>Data confidence</h4><label class="check-row"><input class="confidence-filter" type="checkbox" value="NOMINAL" checked> Nominal</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="DEGRADED" checked> Degraded</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="STALE" checked> Stale</label><label class="check-row"><input class="confidence-filter" type="checkbox" value="DO NOT USE" checked> Do not use</label></div>
+</details>
 <div class="export-row"><button class="export-btn" id="clear-filters">Clear filters</button><button class="export-btn" id="export-csv">Export CSV</button><button class="export-btn" id="export-json">Export JSON</button><button class="export-btn" id="export-report">Report</button></div>
 <div id="catalog-scope" class="catalog-note">Catalog scope will appear after loading.</div>
 </section>
 
 <section id="station-panel" class="ui-card" aria-label="Ground station and pass prediction settings">
- <h3 style="display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-broadcast-tower"></i> Ground Station</span><span id="station-target" style="font-size:.62rem;color:#58a6ff;font-weight:400">NO TARGET</span></h3>
- <div class="station-help">Choose a place by name. You do not need to know coordinates.</div>
+ <h3 style="display:flex;justify-content:space-between;align-items:center"><span><i class="fas fa-broadcast-tower"></i> Where are you?</span><span id="station-target" style="font-size:.62rem;color:#58a6ff;font-weight:400">NO TARGET</span></h3>
+ <div class="station-help">Tell us your location. You do not need to know coordinates.</div>
  <div class="station-search">
-  <input id="station-place-search" type="search" placeholder="Search city or place…" autocomplete="off" aria-label="Search ground station location">
+  <input id="station-place-search" type="search" placeholder="Search city, base or place…" autocomplete="off" aria-label="Search ground station location">
   <button id="station-place-search-btn" type="button"><i class="fas fa-search"></i> Find</button>
  </div>
  <div id="station-search-results" role="listbox" aria-label="Location search results"></div>
@@ -524,7 +847,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
   <label>Minimum elevation<input id="station-mask" type="number" min="0" max="90" step="0.1" value="10">°</label>
   <label>Prediction window<select id="station-window"><option value="12">12 h</option><option value="24" selected>24 h</option><option value="48">48 h</option></select></label>
  </div>
- <button id="station-advanced-toggle" class="station-advanced-toggle" type="button" aria-expanded="false"><i class="fas fa-chevron-right"></i> Advanced: station name & coordinates</button>
+ <button id="station-advanced-toggle" class="station-advanced-toggle" type="button" aria-expanded="false"><i class="fas fa-chevron-right"></i> Technical station settings · name, height & coordinates</button>
  <div id="station-advanced-grid" class="station-grid station-grid-advanced">
   <label>Station name<input id="station-name" type="text" value="Observer Station" autocomplete="off"></label>
   <label>Height<input id="station-height" type="number" min="-1" max="20" step="0.001" value="0"> km</label>
@@ -535,26 +858,174 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#050508;
  <div class="station-meta" id="station-summary">No observer location selected · 10° mask · 24 h.</div>
 </section>
 
-<div id="detail-panel" class="ui-card" role="dialog" aria-label="Selected satellite details" aria-modal="false">
-<button class="close-btn" id="close-detail" aria-label="Close satellite details">&times;</button><div class="detail-kicker">SELECTED SATELLITE — CLICK A BLUE DOT ON THE GLOBE</div><h2 id="sat-name" class="detail-title" tabindex="-1">--</h2>
-<div class="detail-disclosure"><strong>PROPAGATED — SGP4/SDP4.</strong> No observation data is available. Values below are calculated from this object's TLE at <span id="sat-propagated-at" class="utc-clock">--</span>.</div>
-<div class="confidence-line">DATA CONFIDENCE: <span id="sat-confidence">--</span></div>
-<dl class="detail-list"><div class="prov-row"><dt>OBJECT TYPE:</dt><dd id="sat-type">--</dd></div><div class="prov-row"><dt>NORAD ID:</dt><dd id="sat-norad">--</dd></div><div class="prov-row"><dt>Latitude:</dt><dd id="sat-lat">--</dd></div><div class="prov-row"><dt>Longitude:</dt><dd id="sat-lng">--</dd></div><div class="prov-row"><dt>Altitude:</dt><dd id="sat-alt">--</dd></div><div class="prov-row"><dt>Velocity:</dt><dd id="sat-vel">--</dd></div><div class="prov-row"><dt>Azimuth:</dt><dd id="sat-az">--</dd></div><div class="prov-row"><dt>Elevation:</dt><dd id="sat-el">--</dd></div></dl><div class="detail-disclosure" id="pass-detail-summary"><strong>PASS PREDICTION:</strong> Select a ground station to calculate AOS, maximum elevation, LOS and duration.</div>
+<div id="detail-panel" class="ui-card" role="dialog" aria-label="Selected satellite" aria-modal="false">
+<button class="close-btn" id="close-detail" aria-label="Close satellite details">&times;</button><div class="detail-kicker">SELECTED SATELLITE · CLICK A DOT ON THE GLOBE</div><h2 id="sat-name" class="detail-title" tabindex="-1">--</h2>
+<div class="detail-disclosure"><strong>CALCULATED POSITION.</strong> This is a calculated position, not live camera or sensor data. Position calculated from the orbital data at <span id="sat-propagated-at" class="utc-clock">--</span>.</div>
+<div class="confidence-line">DATA FRESHNESS: <span id="sat-confidence">--</span></div>
+<dl class="detail-list"><div class="prov-row"><dt>OBJECT TYPE:</dt><dd id="sat-type">--</dd></div><div class="prov-row"><dt>NORAD ID:</dt><dd id="sat-norad">--</dd></div><div class="prov-row"><dt>Latitude:</dt><dd id="sat-lat">--</dd></div><div class="prov-row"><dt>Longitude:</dt><dd id="sat-lng">--</dd></div><div class="prov-row"><dt>Altitude:</dt><dd id="sat-alt">--</dd></div><div class="prov-row"><dt>Velocity:</dt><dd id="sat-vel">--</dd></div><div class="prov-row"><dt>Azimuth:</dt><dd id="sat-az">--</dd></div><div class="prov-row"><dt>Elevation:</dt><dd id="sat-el">--</dd></div></dl><details class="expert-details satellite-expert"><summary>Technical satellite data</summary><div class="expert-copy">These values are calculated from the satellite orbital elements. <b>NORAD ID</b> identifies the tracked object. Latitude/longitude show its current sub-satellite point. Azimuth/elevation describe where it appears from your selected location.</div></details>
+<div class="detail-disclosure" id="pass-detail-summary"><strong>PASS PREDICTION:</strong> Select a ground station to calculate AOS, maximum elevation, LOS and duration.</div>
 
 </div>
 
 
 <section id="pass-panel" class="ui-card" aria-label="Satellite pass predictions">
   <div class="pass-summary" aria-label="Pass predictions">
- <h4 id="pass-title">NEXT PASSES · UTC <span style="float:right;color:#8b949e;font-weight:400;font-size:.56rem">AOS · MAX ELEVATION · LOS · DURATION</span></h4>
- <div class="pass-hero" id="pass-hero"><div class="pass-metric"><span class="pass-metric-label">AOS</span><span class="pass-metric-value" id="pass-aos">--</span><span class="pass-metric-sub" id="pass-aos-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">Max Elev.</span><span class="pass-metric-value" id="pass-max">--</span><span class="pass-metric-sub" id="pass-max-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">LOS</span><span class="pass-metric-value" id="pass-los">--</span><span class="pass-metric-sub" id="pass-los-sub">--</span></div><div class="pass-metric"><span class="pass-metric-label">Duration</span><span class="pass-metric-value" id="pass-duration">--</span><span class="pass-metric-sub">above mask</span></div></div>
+ <h4 id="pass-title">NEXT SATELLITE PASSES <span style="float:right;color:#8b949e;font-weight:400;font-size:.56rem">WHEN IT APPEARS · HIGHEST · WHEN IT LEAVES · VISIBLE</span></h4>
+ <div class="pass-explainer">Simple view: <b>Starts</b> = when it becomes visible, <b>Highest</b> = its highest point, <b>Ends</b> = when it disappears. Open technical details if you want the orbital terminology.</div>
+ <div class="pass-hero" id="pass-hero"><div class="pass-metric"><span class="pass-metric-label">STARTS</span><span class="pass-metric-value" id="pass-aos">--</span><span class="pass-metric-sub" id="pass-aos-sub">AOS · --</span></div><div class="pass-metric"><span class="pass-metric-label">HIGHEST</span><span class="pass-metric-value" id="pass-max">--</span><span class="pass-metric-sub" id="pass-max-sub">MAX · --</span></div><div class="pass-metric"><span class="pass-metric-label">ENDS</span><span class="pass-metric-value" id="pass-los">--</span><span class="pass-metric-sub" id="pass-los-sub">LOS · --</span></div><div class="pass-metric"><span class="pass-metric-label">VISIBLE FOR</span><span class="pass-metric-value" id="pass-duration">--</span><span class="pass-metric-sub">above your chosen mask</span></div></div>
  <div id="pass-list"><div class="empty-note">Select a satellite to calculate passes.</div></div>
 </div>
+<details class="expert-details pass-expert" id="pass-technical-help"><summary>What do AOS / Max Elevation / LOS mean?</summary><div class="expert-copy"><b>AOS (Acquisition of Signal)</b> = the satellite rises above your chosen minimum elevation. <b>Max Elevation</b> = the highest point reached during that pass. <b>LOS (Loss of Signal)</b> = the satellite drops below the minimum elevation. The app predicts these times from orbital data; they are not live radio-contact confirmations.</div></details>
 </section>
 
-<div id="overhead-panel" class="ui-card"><h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Passes Above Horizon</h3><div id="overhead-list"><div class="empty-note">Scanning...</div></div></div>
-<div id="radar-panel" class="ui-card"><h3 style="font-size:.75rem;color:#8b949e;text-transform:uppercase">Sky Radar View</h3><canvas id="radar-canvas" width="180" height="180" role="img" aria-describedby="radar-description" aria-label="Sky radar showing tracked satellites above the horizon"></canvas><div id="radar-description" class="sr-only">No satellites above the horizon.</div></div>
+<div id="overhead-panel" class="ui-card"><h3 style="font-size:.85rem;color:#8b949e;text-transform:uppercase">Satellites above you</h3><div id="overhead-list"><div class="empty-note">Scanning...</div></div></div>
+<div id="radar-panel" class="ui-card"><h3 style="font-size:.75rem;color:#8b949e;text-transform:uppercase">Sky Radar · What is above you?</h3><canvas id="radar-canvas" width="180" height="180" role="img" aria-describedby="radar-description" aria-label="Sky radar showing tracked satellites above the horizon"></canvas><div id="radar-description" class="sr-only">No satellites above the horizon.</div></div>
 <div id="time-panel" class="ui-card" aria-label="Time controls"><button class="time-btn" id="time-reset"><i class="fas fa-undo"></i> Realtime</button><button class="time-btn" id="time-pause" aria-label="Pause simulation"><i class="fas fa-pause"></i></button><button class="time-btn speed-btn active-speed" data-speed="1">1x</button><button class="time-btn speed-btn" data-speed="10">10x</button><button class="time-btn speed-btn" data-speed="60">60x</button><button class="time-btn speed-btn" data-speed="300">300x</button><button class="time-btn speed-btn" data-speed="3600">3600x</button><label class="sr-only" for="time-slider">Simulation time offset in seconds</label><input type="range" id="time-slider" min="-86400" max="86400" value="0" style="width:110px"><span id="time-display" style="font-family:monospace;font-size:.8rem" aria-live="polite">LIVE</span></div>
+
+
+<style id="phase43-product-ui">
+/* =========================================================
+   PHASE 4.3 — PRODUCT / CUSTOMER-FRIENDLY OPERATIONS UI
+   Keeps every existing control + ID intact. Visual language is
+   simplified for first-time users; technical detail is opt-in.
+   ========================================================= */
+:root{
+  --left-col:332px;
+  --right-col:332px;
+  --bottom-dock:188px;
+  --panel-gap:10px;
+}
+body{background:#02060d;overflow:hidden}
+.ui-card{background:rgba(7,12,20,.94);border:1px solid #263342;box-shadow:0 8px 28px rgba(0,0,0,.28);backdrop-filter:blur(7px)}
+#webgl-container{left:var(--left-col)!important;right:var(--right-col)!important;top:0!important;bottom:0!important;z-index:1!important}
+#webgl-container canvas{width:100%!important;height:100%!important}
+
+/* LEFT — discovery workflow */
+#header-panel{left:10px!important;top:10px!important;width:calc(var(--left-col) - 20px)!important;height:332px!important;overflow:hidden!important;padding:13px!important}
+#header-panel h1{font-size:1.2rem;margin:0 0 4px}
+#header-panel>p{font-size:.7rem!important;line-height:1.35!important;color:#a7b0bc!important;margin:0 0 7px!important}
+#header-panel .search-box input{height:36px;font-size:.76rem}
+#header-panel .location-btn{height:35px;margin-top:6px}
+#header-panel .category-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+#header-panel .tab-btn{font-size:.66rem;padding:6px 9px}
+#header-panel .distance-filter{margin-top:8px;padding-top:7px}
+#header-panel .distance-btn{font-size:.66rem;padding:5px 8px}
+#header-panel .distance-note{font-size:.58rem;margin-top:4px}
+#search-results{max-height:0!important;overflow:hidden!important}
+
+#station-panel{left:10px!important;top:352px!important;width:calc(var(--left-col) - 20px)!important;height:208px!important;overflow:hidden!important;padding:12px!important}
+#station-panel h3{font-size:.84rem!important;margin:0 0 3px!important}
+#station-panel .station-help{font-size:.65rem;line-height:1.25;margin-bottom:5px}
+#station-panel .station-search input{height:32px;font-size:.7rem}
+#station-panel .station-search button{height:32px;font-size:.68rem}
+#station-panel .station-location-actions{gap:5px;margin-top:5px}
+#station-panel .station-location-actions button{height:29px;font-size:.64rem}
+#station-panel .station-selected{padding:6px;margin-top:5px;font-size:.64rem}
+#station-panel .station-grid{gap:6px;margin-top:5px}
+#station-panel .station-grid label{font-size:.6rem}
+#station-panel .station-grid input,#station-panel .station-grid select{height:28px;font-size:.66rem}
+#station-panel .station-advanced-toggle{font-size:.6rem;margin-top:5px;padding:4px 0}
+#station-panel .station-actions{margin-top:4px}
+#station-panel .station-actions button{height:28px;font-size:.65rem}
+#station-panel .station-meta{font-size:.58rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#overhead-panel{left:10px!important;bottom:10px!important;top:auto!important;width:calc(var(--left-col) - 20px)!important;height:112px!important;padding:10px!important;overflow:hidden!important}
+#overhead-panel h3{font-size:.7rem!important;margin:0 0 4px!important}
+#overhead-list{max-height:78px!important;overflow:auto!important}
+#overhead-list .sat-item{padding:4px 7px;font-size:.65rem}
+
+/* RIGHT — explain status first, details second */
+#provenance-panel{top:10px!important;right:10px!important;width:calc(var(--right-col) - 20px)!important;height:174px!important;padding:11px!important;overflow:hidden!important}
+#provenance-panel h3{font-size:.76rem!important;margin:0 0 6px!important;display:flex;align-items:center;gap:7px}
+#provenance-panel .prov-row{font-size:.61rem!important;margin-bottom:2px!important}
+#provenance-panel .prov-label{color:#8b949e}
+#provenance-panel .prov-value{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.plain-badge{font-size:.52rem!important;letter-spacing:.5px;padding:2px 5px;border:1px solid #285b3a;border-radius:999px;color:#7ee787;background:#0b2115;font-weight:600}
+#provenance-panel #disclosure{font-size:.58rem!important;line-height:1.25!important;padding:5px!important;margin-top:4px!important}
+
+#filters-panel{top:194px!important;right:10px!important;width:calc(var(--right-col) - 20px)!important;height:198px!important;padding:11px!important;overflow:auto!important}
+#filters-panel h3{font-size:.76rem!important;margin:0 0 6px!important}
+#filters-panel .filter-grid{gap:5px;margin-top:4px}
+#filters-panel .filter-grid label{font-size:.58rem}
+#filters-panel .filter-grid input{height:27px;font-size:.64rem}
+#filters-panel .filter-section{margin-top:5px;padding-top:5px}
+#filters-panel .filter-section h4{font-size:.58rem;margin-bottom:3px}
+#filters-panel .check-row{font-size:.6rem;margin:2px 0}
+#filters-panel .export-row{margin-top:5px;gap:4px}
+#filters-panel .export-btn{font-size:.57rem;padding:5px 7px}
+
+#detail-panel{top:404px!important;right:10px!important;bottom:66px!important;width:calc(var(--right-col) - 20px)!important;padding:11px!important;overflow:auto!important}
+#detail-panel .detail-kicker{font-size:.58rem}
+#detail-panel .detail-title{font-size:1rem;margin:2px 0 6px}
+#detail-panel .detail-disclosure{font-size:.59rem;line-height:1.35;padding:6px;margin-bottom:5px}
+#detail-panel .confidence-line{font-size:.61rem;margin-bottom:5px}
+#detail-panel .detail-list{font-size:.61rem}
+#detail-panel .detail-list .prov-row{margin-bottom:2px}
+#detail-panel .pass-detail-summary{font-size:.58rem}
+
+/* CENTRAL BOTTOM — radar and pass prediction always visible */
+#radar-panel{position:absolute!important;left:calc(var(--left-col) + 12px)!important;right:auto!important;bottom:58px!important;width:176px!important;height:176px!important;padding:7px!important;z-index:12!important;display:block!important;text-align:center!important}
+#radar-panel h3{font-size:.6rem!important;margin:0!important;line-height:1.1}
+#radar-canvas{width:148px!important;height:148px!important;margin:4px auto 0!important}
+#pass-panel{position:absolute!important;left:calc(var(--left-col) + 198px)!important;right:calc(var(--right-col) + 10px)!important;bottom:58px!important;height:176px!important;padding:9px!important;z-index:11!important;overflow:hidden!important}
+#pass-panel .pass-summary{height:100%!important}
+#pass-panel h4{font-size:.66rem!important;margin:0 0 5px!important;letter-spacing:.4px}
+#pass-panel h4 span{font-size:.5rem!important}
+.pass-explainer{font-size:.56rem;color:#9da7b3;line-height:1.2;margin:0 0 5px;padding:4px 6px;border-left:2px solid #3b82f6;background:#0a1422;border-radius:3px}
+#pass-panel .pass-hero{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px!important}
+#pass-panel .pass-metric{padding:5px 4px!important;min-width:0}
+#pass-panel .pass-metric-label{font-size:.52rem!important}
+#pass-panel .pass-metric-value{font-size:.68rem!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pass-panel .pass-metric-sub{font-size:.48rem!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pass-panel #pass-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4px!important;max-height:58px!important;overflow:auto!important;margin-top:5px}
+#pass-panel .pass-card{font-size:.53rem!important;padding:4px 6px!important;margin:0!important;line-height:1.2}
+#pass-panel .pass-meta{font-size:.49rem!important}
+#pass-technical-help{position:absolute;left:8px;bottom:3px;width:176px;z-index:20;font-size:.52rem}
+#pass-technical-help summary{cursor:pointer;color:#79b8ff}
+#pass-technical-help .expert-copy{background:#07101b;border:1px solid #263342;border-radius:5px;padding:6px;line-height:1.3}
+
+/* Expert information is opt-in */
+.expert-details{margin-top:5px;font-size:.58rem;color:#9da7b3}
+.expert-details summary{cursor:pointer;color:#79b8ff;font-weight:600;list-style:none}
+.expert-details summary::-webkit-details-marker{display:none}
+.expert-details summary:before{content:'▸ ';color:#58a6ff}
+.expert-details[open] summary:before{content:'▾ '}
+.expert-copy{margin-top:4px;padding:6px;border:1px solid #273444;border-radius:5px;background:#08111d;line-height:1.35}
+.filter-expert{border-top:1px solid #273444;padding-top:5px}
+#filters-panel .filter-expert .filter-grid{margin-top:5px}
+#filters-panel .filter-expert .filter-section{margin-top:4px}
+.satellite-expert{margin:4px 0 6px}
+
+/* Time bar belongs to the central workspace, never on top of cards */
+#time-panel{left:50%!important;bottom:8px!important;transform:translateX(-50%)!important;padding:6px 9px!important;gap:5px!important;z-index:30!important}
+#time-panel .time-btn{font-size:.61rem;padding:5px 7px}
+#time-slider{width:95px!important}
+#time-display{font-size:.65rem!important}
+
+/* Desktop / tablet fallbacks: keep radar visible rather than silently hiding it */
+@media(max-width:1200px) and (min-width:901px){
+ :root{--left-col:300px;--right-col:300px}
+ #header-panel{height:300px!important}
+ #station-panel{top:320px!important;height:190px!important}
+ #overhead-panel{height:90px!important}
+ #radar-panel{left:calc(var(--left-col) + 8px)!important;width:150px!important;height:150px!important}
+ #radar-canvas{width:125px!important;height:125px!important}
+ #pass-panel{left:calc(var(--left-col) + 166px)!important;right:calc(var(--right-col) + 8px)!important;height:150px!important}
+ #pass-panel #pass-list{max-height:38px!important}
+ #detail-panel{top:402px!important}
+}
+@media(max-width:900px){
+ body{overflow:auto}
+ #webgl-container{left:0!important;right:0!important;position:fixed!important;opacity:.22}
+ #header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:calc(100% - 20px)!important;height:auto!important;margin:10px!important;max-height:none!important}
+ #radar-panel,#pass-panel{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:calc(100% - 20px)!important;height:auto!important;margin:10px!important}
+ #radar-panel{display:block!important}
+ #pass-panel{min-height:210px!important}
+ #pass-panel #pass-list{max-height:100px!important;grid-template-columns:1fr!important}
+ #pass-technical-help{position:static;width:auto;margin:5px 0}
+ #time-panel{position:fixed!important}
+}
+</style>
 
 <script>
 'use strict';
@@ -732,6 +1203,17 @@ function announce(message,showBanner=false){
 function init(){
  initScene();initObserverLocation();initEventListeners();updateUtcClock();setInterval(updateUtcClock,1000);loadSatelliteData('stations');animate();
 }
+
+
+/* Phase 4.3 product-language helpers — no data logic changed. */
+(function(){
+  const map={
+    'pass-aos-sub':'AOS · --',
+    'pass-max-sub':'MAX · --',
+    'pass-los-sub':'LOS · --'
+  };
+  Object.entries(map).forEach(([id,text])=>{const e=document.getElementById(id);if(e&&e.textContent==='--')e.textContent=text;});
+})();
 
 document.addEventListener('DOMContentLoaded',init);
 
@@ -1389,7 +1871,7 @@ function initEventListeners(){
   document.getElementById('station-place-search-btn').addEventListener('click',searchGroundStationPlace);
   document.getElementById('station-place-search').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchGroundStationPlace()}});
   document.getElementById('station-clear-place').addEventListener('click',resetGroundStationLocation);
-  document.getElementById('station-advanced-toggle').addEventListener('click',()=>{const btn=document.getElementById('station-advanced-toggle'),grid=document.getElementById('station-advanced-grid'),open=grid.classList.toggle('open');btn.setAttribute('aria-expanded',open?'true':'false');btn.innerHTML=`<i class="fas fa-chevron-${open?'down':'right'}"></i> Advanced: station name & coordinates`});
+  document.getElementById('station-advanced-toggle').addEventListener('click',()=>{const btn=document.getElementById('station-advanced-toggle'),grid=document.getElementById('station-advanced-grid'),open=grid.classList.toggle('open');btn.setAttribute('aria-expanded',open?'true':'false');btn.innerHTML=`<i class="fas fa-chevron-${open?'down':'right'}"></i> Technical station settings · name, height & coordinates`});
  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',e=>{document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false')});e.currentTarget.classList.add('active');e.currentTarget.setAttribute('aria-selected','true');loadSatelliteData(e.currentTarget.dataset.group)}));
  document.getElementById('search-input').addEventListener('input',e=>{searchQuery=e.target.value;applySearchFilter()});
  document.getElementById('force-refresh-btn').addEventListener('click',()=>loadSatelliteData(currentGroup,true));
@@ -1436,5 +1918,560 @@ function showLoading(show,text=''){const overlay=document.getElementById('loadin
 function onWindowResize(){const container=document.getElementById('webgl-container');const w=Math.max(320,container.clientWidth),h=Math.max(320,container.clientHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
 function animate(){requestAnimationFrame(animate);if(earthClouds)earthClouds.rotation.y+=0.000035;if(selectionMarker?.visible){const pulse=1+Math.sin(Date.now()*.004)*.08;selectionHalo.scale.setScalar(pulse);selectionRing.rotation.z+=.015;updateSelectionVisual();updateSelectedModel()}const now=Date.now(),delta=now-lastFrameTimestamp;lastFrameTimestamp=now;if(!isPaused&&timeMultiplier!==1){simulationOffsetMs+=delta*(timeMultiplier-1);const sec=Math.max(-86400,Math.min(86400,Math.round(simulationOffsetMs/1000)));simulationOffsetMs=sec*1000;document.getElementById('time-slider').value=sec;document.getElementById('time-display').innerText=`${sec}s`;updateTargetUtc()}if(!isPaused)updatePositions();controls.update();renderer.render(scene,camera)}
 </script>
+
+<style id="phase44-dual-mode-ui">
+:root{--lm:306px;--rm:330px;--gap:12px}
+#experience-panel{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(7,12,20,.97);border:1px solid #304052;border-radius:9px;box-shadow:0 8px 28px rgba(0,0,0,.35);backdrop-filter:blur(10px)}
+#experience-panel .experience-label{font-size:.64rem;color:#8b949e;text-transform:uppercase;letter-spacing:.7px;font-weight:700}
+#ui-mode{background:#0d1117;border:1px solid #3b4a5b;color:#e6edf3;border-radius:6px;padding:6px 30px 6px 9px;font-size:.72rem;font-weight:700;cursor:pointer;min-width:170px}
+#experience-help{font-size:.62rem;color:#8b949e;max-width:240px}.explorer-mode #experience-help:after{content:'Easy view · essential information only'}.technical-mode #experience-help:after{content:'Full technical, orbital and data information'}
+#webgl-container{top:0!important;bottom:0!important;left:var(--lm)!important;right:var(--rm)!important}
+.ui-card{border-radius:11px;background:rgba(7,12,20,.95);border-color:#2a3949;box-shadow:0 10px 30px rgba(0,0,0,.30)}
+/* Explorer: beginner-friendly */
+body.explorer-mode #header-panel{left:14px!important;top:14px!important;width:calc(var(--lm) - 22px)!important;height:350px!important;overflow:hidden}
+body.explorer-mode #station-panel{left:14px!important;top:376px!important;width:calc(var(--lm) - 22px)!important;height:210px!important;max-height:none!important;overflow:hidden!important}
+body.explorer-mode #overhead-panel{left:14px!important;bottom:14px!important;width:calc(var(--lm) - 22px)!important;height:105px!important;max-height:none!important}
+body.explorer-mode #provenance-panel,body.explorer-mode #filters-panel{display:none!important}
+body.explorer-mode #detail-panel{display:none;right:14px!important;left:auto!important;top:14px!important;bottom:220px!important;width:calc(var(--rm) - 22px)!important;max-height:none!important}
+body.explorer-mode #radar-panel{position:absolute!important;left:calc(var(--lm) + 14px)!important;right:auto!important;bottom:74px!important;width:184px!important;height:184px!important;padding:8px!important;display:block!important;overflow:hidden!important}
+body.explorer-mode #radar-canvas{width:150px!important;height:150px!important;margin:5px auto 0!important}
+body.explorer-mode #pass-panel{position:absolute!important;left:calc(var(--lm) + 208px)!important;right:calc(var(--rm) + 14px)!important;bottom:74px!important;height:184px!important;padding:10px!important;overflow:hidden!important}
+body.explorer-mode #pass-panel .pass-explainer{font-size:.63rem;line-height:1.35}
+body.explorer-mode #pass-panel #pass-list{max-height:52px!important}
+body.explorer-mode #time-panel{left:50%!important;bottom:14px!important;transform:translateX(-50%)!important}
+body.explorer-mode #station-panel .station-advanced-toggle,body.explorer-mode #station-panel .station-grid-advanced,body.explorer-mode #station-panel .station-actions,body.explorer-mode #station-panel .station-meta{display:none!important}
+body.explorer-mode #station-panel .station-help{font-size:.68rem}
+/* Technical: all existing information is exposed */
+body.technical-mode #header-panel{left:14px!important;top:14px!important;width:calc(var(--lm) - 22px)!important;height:310px!important;overflow:auto}
+body.technical-mode #station-panel{left:14px!important;top:336px!important;width:calc(var(--lm) - 22px)!important;bottom:200px!important;height:auto!important;max-height:none!important;overflow:auto!important}
+body.technical-mode #overhead-panel{left:14px!important;bottom:14px!important;width:calc(var(--lm) - 22px)!important;height:174px!important;max-height:none!important}
+body.technical-mode #provenance-panel{display:block!important;right:14px!important;top:14px!important;width:calc(var(--rm) - 22px)!important;height:235px!important;max-height:none!important;overflow:auto!important}
+body.technical-mode #filters-panel{display:block!important;right:14px!important;top:261px!important;width:calc(var(--rm) - 22px)!important;height:230px!important;max-height:none!important;overflow:auto!important}
+body.technical-mode #detail-panel{display:block!important;left:auto!important;right:14px!important;top:503px!important;bottom:205px!important;width:calc(var(--rm) - 22px)!important;max-height:none!important;overflow:auto!important}
+body.technical-mode #radar-panel{position:absolute!important;left:calc(var(--lm) + 14px)!important;right:auto!important;bottom:72px!important;width:190px!important;height:190px!important;padding:8px!important;display:block!important}
+body.technical-mode #radar-canvas{width:158px!important;height:158px!important;margin:5px auto 0!important}
+body.technical-mode #pass-panel{position:absolute!important;left:calc(var(--lm) + 216px)!important;right:calc(var(--rm) + 14px)!important;bottom:72px!important;height:190px!important;padding:10px!important;overflow:hidden!important}
+body.technical-mode #pass-panel #pass-list{max-height:60px!important}
+body.technical-mode #pass-technical-help{display:block!important}
+body.technical-mode .expert-details{display:block}
+body.technical-mode #station-advanced-grid.open{display:grid!important}
+/* technical details are readable, not tiny */
+body.technical-mode .prov-row{font-size:.69rem}body.technical-mode .detail-list{font-size:.70rem}
+/* Responsive */
+@media(max-width:1120px){:root{--lm:286px;--rm:300px}.explorer-mode #pass-panel{left:calc(var(--lm) + 190px)!important}.technical-mode #pass-panel{left:calc(var(--lm) + 200px)!important}}
+@media(max-width:850px){body{overflow:auto!important}#experience-panel{position:sticky;top:8px;left:8px;transform:none;width:calc(100% - 16px);justify-content:space-between}.experience-label{display:none}#experience-help{display:none}#webgl-container{position:fixed!important;inset:0!important;opacity:.28;left:0!important;right:0!important}.ui-card{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:calc(100% - 20px)!important;height:auto!important;max-height:none!important;margin:10px!important}.explorer-mode #header-panel,.technical-mode #header-panel{height:auto!important}.explorer-mode #station-panel,.technical-mode #station-panel{height:auto!important}.explorer-mode #overhead-panel,.technical-mode #overhead-panel{height:auto!important}.explorer-mode #radar-panel,.technical-mode #radar-panel,.explorer-mode #pass-panel,.technical-mode #pass-panel,.explorer-mode #time-panel,.technical-mode #time-panel{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;width:calc(100% - 20px)!important;height:auto!important;margin:10px!important}.explorer-mode #radar-panel,.technical-mode #radar-panel{min-height:190px}.explorer-mode #pass-panel,.technical-mode #pass-panel{min-height:205px}.technical-mode #provenance-panel,.technical-mode #filters-panel,.technical-mode #detail-panel{display:block!important}}
+</style>
+<style id="phase44-final-ui-fix">
+/* =========================================================
+   PHASE 4.4 FINAL UI FIX
+   Goal: Earth is NEVER covered by the bottom information dock.
+   Radar + passes live in a reserved bottom workspace.
+   AOS/Max/LOS explanation is a real collapsed disclosure,
+   never an overlay over the pass metrics.
+   ========================================================= */
+:root{
+  --left-col:332px;
+  --right-col:332px;
+  --bottom-space:220px;
+}
+
+/* Reserve the lower part of the central viewport for the dock.
+   Three.js therefore renders the globe in the free central area,
+   instead of rendering it underneath the cards. */
+#webgl-container{
+  left:var(--left-col)!important;
+  right:var(--right-col)!important;
+  top:0!important;
+  bottom:var(--bottom-space)!important;
+  z-index:1!important;
+}
+#webgl-container canvas{
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+}
+
+/* Keep the top view selector in the central workspace, not on the Earth. */
+#view-mode-panel{
+  position:absolute!important;
+  top:12px!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  z-index:25!important;
+}
+
+/* Bottom workspace: two clean, non-overlapping cards. */
+#radar-panel{
+  position:absolute!important;
+  left:calc(var(--left-col) + 12px)!important;
+  right:auto!important;
+  bottom:12px!important;
+  width:180px!important;
+  height:196px!important;
+  padding:9px!important;
+  z-index:20!important;
+  display:block!important;
+  overflow:hidden!important;
+}
+#radar-panel h3{
+  font-size:.62rem!important;
+  line-height:1.2!important;
+  margin:0!important;
+  text-align:left!important;
+}
+#radar-canvas{
+  width:158px!important;
+  height:158px!important;
+  margin:5px auto 0!important;
+}
+
+#pass-panel{
+  position:absolute!important;
+  left:calc(var(--left-col) + 204px)!important;
+  right:calc(var(--right-col) + 12px)!important;
+  bottom:12px!important;
+  height:196px!important;
+  padding:9px 10px!important;
+  z-index:20!important;
+  overflow:hidden!important;
+}
+#pass-panel .pass-summary{
+  height:auto!important;
+  border:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+#pass-panel #pass-title{
+  font-size:.68rem!important;
+  margin:0 0 5px!important;
+  line-height:1.2!important;
+}
+#pass-panel #pass-title span{
+  font-size:.49rem!important;
+}
+#pass-panel .pass-explainer{
+  font-size:.55rem!important;
+  line-height:1.25!important;
+  margin:0 0 5px!important;
+  padding:4px 6px!important;
+}
+#pass-panel .pass-hero{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:5px!important;
+  margin-bottom:5px!important;
+}
+#pass-panel .pass-metric{
+  padding:5px!important;
+  min-width:0!important;
+}
+#pass-panel .pass-metric-label{font-size:.51rem!important}
+#pass-panel .pass-metric-value{font-size:.67rem!important}
+#pass-panel .pass-metric-sub{font-size:.46rem!important}
+#pass-panel #pass-list{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:4px!important;
+  max-height:53px!important;
+  overflow:auto!important;
+  margin-top:0!important;
+}
+#pass-panel .pass-card{
+  font-size:.51rem!important;
+  line-height:1.18!important;
+  padding:4px 6px!important;
+  margin:0!important;
+}
+#pass-panel .pass-meta{font-size:.47rem!important}
+
+/* The AOS/Max/LOS help is a CLOSED disclosure row.
+   It occupies its own space and can never float over the metrics. */
+#pass-panel #pass-technical-help{
+  position:static!important;
+  width:100%!important;
+  margin:5px 0 0!important;
+  padding:0!important;
+  z-index:auto!important;
+  font-size:.51rem!important;
+}
+#pass-panel #pass-technical-help summary{
+  display:block!important;
+  cursor:pointer!important;
+  padding:4px 6px!important;
+  color:#79b8ff!important;
+  background:#08111d!important;
+  border:1px solid #263342!important;
+  border-radius:4px!important;
+  line-height:1.15!important;
+}
+#pass-panel #pass-technical-help .expert-copy{
+  position:relative!important;
+  margin-top:3px!important;
+  max-height:70px!important;
+  overflow:auto!important;
+  font-size:.52rem!important;
+  line-height:1.3!important;
+}
+
+/* Left and right columns remain independent of the globe. */
+#header-panel,#station-panel,#overhead-panel,
+#provenance-panel,#filters-panel,#detail-panel{
+  z-index:21!important;
+}
+
+/* Time controls sit below the globe and below the information dock. */
+#time-panel{
+  left:50%!important;
+  bottom:2px!important;
+  transform:translateX(-50%)!important;
+  z-index:30!important;
+}
+
+/* At medium desktop sizes, shrink the dock rather than covering the Earth. */
+@media(max-width:1200px) and (min-width:901px){
+  :root{--left-col:300px;--right-col:300px;--bottom-space:190px}
+  #webgl-container{bottom:var(--bottom-space)!important}
+  #radar-panel{
+    left:calc(var(--left-col) + 8px)!important;
+    width:150px!important;
+    height:170px!important;
+    bottom:10px!important;
+  }
+  #radar-canvas{width:132px!important;height:132px!important}
+  #pass-panel{
+    left:calc(var(--left-col) + 166px)!important;
+    right:calc(var(--right-col) + 8px)!important;
+    height:170px!important;
+    bottom:10px!important;
+  }
+  #pass-panel #pass-list{max-height:35px!important}
+}
+
+/* Mobile: cards stack normally; the globe becomes a background layer. */
+@media(max-width:900px){
+  :root{--bottom-space:0px}
+  #webgl-container{bottom:0!important}
+  #view-mode-panel{position:fixed!important;top:8px!important}
+  #radar-panel,#pass-panel{
+    position:relative!important;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:calc(100% - 20px)!important;
+    height:auto!important;
+    margin:10px!important;
+  }
+  #radar-panel{min-height:190px!important}
+  #pass-panel{min-height:220px!important}
+  #pass-panel #pass-list{grid-template-columns:1fr!important;max-height:100px!important}
+  #pass-panel #pass-technical-help{position:static!important}
+}
+</style>
+
+
+
+<script id="phase44-mode-script">
+(function(){
+  const panel=document.createElement('div');
+  panel.id='experience-panel';
+  panel.setAttribute('aria-label','Interface mode');
+  panel.innerHTML='<span class="experience-label">View</span><select id="ui-mode" aria-label="Choose interface view"><option value="explorer">Explorer — simple</option><option value="technical">Technical — full detail</option></select><span id="experience-help" aria-hidden="true"></span>';
+  document.body.appendChild(panel);
+
+  const labels={
+    explorer:{station:'Where are you?',stationHelp:'Tell us your location. We will show satellites that can pass over you.',overhead:'Satellites above you',radar:'Sky Radar · What is above you?',pass:'Next satellite passes',filters:'Find satellites',detail:'Satellite details',search:'Find a satellite by name or ID…',locate:'Show my location on the globe',altitude:'How high is it?',note:'Near Earth · Higher orbit · Very high orbit'},
+    technical:{station:'Ground Station',stationHelp:'Ground-station observer definition and pass-prediction settings.',overhead:'SATELLITES ABOVE HORIZON',radar:'SKY RADAR VIEW',pass:'NEXT SATELLITE PASSES',filters:'CATALOG & FILTERS',detail:'SELECTED SATELLITE · CLICK A DOT ON THE GLOBE',search:'Search satellite or NORAD ID…',locate:'Pin my location on the globe',altitude:'ORBIT ALTITUDE',note:'LEO < 2,000 km · MEO 2,000–35,786 km · Far / GEO+ ≥ 35,786 km'}
+  };
+  const setText=(selector,text)=>{const e=document.querySelector(selector);if(e)e.textContent=text};
+  function applyMode(mode,announceIt){
+    document.body.classList.toggle('explorer-mode',mode==='explorer');
+    document.body.classList.toggle('technical-mode',mode==='technical');
+    const L=labels[mode];
+    const search=document.getElementById('search-input');if(search)search.placeholder=L.search;
+    const locate=document.getElementById('locate-me');if(locate)locate.innerHTML='<i class="fas fa-crosshairs"></i> '+L.locate;
+    const stationH=document.querySelector('#station-panel h3');if(stationH){const target=document.getElementById('station-target');stationH.innerHTML='<span><i class="fas fa-broadcast-tower"></i> '+L.station+'</span>';if(target)stationH.appendChild(target)}
+    setText('#station-panel .station-help',L.stationHelp);setText('#overhead-panel h3',L.overhead);setText('#radar-panel h3',L.radar);setText('#pass-title',L.pass);setText('#filters-panel h3',L.filters);setText('#detail-panel .detail-kicker',L.detail);setText('#header-panel .distance-title',L.altitude);setText('#header-panel .distance-note',L.note);
+    document.documentElement.setAttribute('data-interface-mode',mode);
+    try{localStorage.setItem('sattracker-interface-mode',mode)}catch(e){}
+    if(mode==='technical')setTimeout(expandTechnical,0);
+    if(announceIt && typeof announce==='function')announce(mode==='explorer'?'Explorer view enabled. Showing essential information in simple language.':'Technical view enabled. Full satellite, orbital, catalogue, station and provenance information is shown.');
+  }
+  function expandTechnical(){
+    if(!document.body.classList.contains('technical-mode'))return;
+    document.querySelectorAll('details.expert-details').forEach(d=>d.open=true);
+    const adv=document.getElementById('station-advanced-grid');if(adv)adv.classList.add('open');
+  }
+  const select=document.getElementById('ui-mode');
+  let saved='explorer';try{saved=localStorage.getItem('sattracker-interface-mode')||'explorer'}catch(e){}
+  if(saved!=='technical')saved='explorer';
+  select.value=saved;select.addEventListener('change',()=>applyMode(select.value,true));applyMode(saved,false);
+  const observer=new MutationObserver(()=>expandTechnical());observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
+<style id="phase44-final-mode-overrides">
+/* Mode-specific rules in the dual-mode stylesheet are more specific than
+   the generic rules above, so these explicit final overrides are intentional. */
+body.explorer-mode #webgl-container,
+body.technical-mode #webgl-container{
+  bottom:var(--bottom-space)!important;
+}
+body.explorer-mode #radar-panel,
+body.technical-mode #radar-panel{
+  left:calc(var(--left-col) + 12px)!important;
+  right:auto!important;
+  bottom:12px!important;
+  width:180px!important;
+  height:196px!important;
+  padding:9px!important;
+  display:block!important;
+  overflow:hidden!important;
+}
+body.explorer-mode #radar-canvas,
+body.technical-mode #radar-canvas{
+  width:158px!important;
+  height:158px!important;
+  margin:5px auto 0!important;
+}
+body.explorer-mode #pass-panel,
+body.technical-mode #pass-panel{
+  left:calc(var(--left-col) + 204px)!important;
+  right:calc(var(--right-col) + 12px)!important;
+  bottom:12px!important;
+  height:196px!important;
+  padding:9px 10px!important;
+  overflow:hidden!important;
+}
+body.explorer-mode #pass-panel #pass-list,
+body.technical-mode #pass-panel #pass-list{
+  max-height:53px!important;
+}
+body.explorer-mode #pass-panel #pass-technical-help,
+body.technical-mode #pass-panel #pass-technical-help{
+  position:static!important;
+  left:auto!important;
+  bottom:auto!important;
+  width:100%!important;
+  margin:5px 0 0!important;
+}
+body.explorer-mode #pass-panel #pass-technical-help .expert-copy,
+body.technical-mode #pass-panel #pass-technical-help .expert-copy{
+  position:static!important;
+  max-height:70px!important;
+  overflow:auto!important;
+}
+
+@media(max-width:1200px) and (min-width:901px){
+  body.explorer-mode #webgl-container,
+  body.technical-mode #webgl-container{bottom:var(--bottom-space)!important}
+  body.explorer-mode #radar-panel,
+  body.technical-mode #radar-panel{
+    left:calc(var(--left-col) + 8px)!important;
+    width:150px!important;height:170px!important;bottom:10px!important;
+  }
+  body.explorer-mode #radar-canvas,
+  body.technical-mode #radar-canvas{width:132px!important;height:132px!important}
+  body.explorer-mode #pass-panel,
+  body.technical-mode #pass-panel{
+    left:calc(var(--left-col) + 166px)!important;
+    right:calc(var(--right-col) + 8px)!important;
+    height:170px!important;bottom:10px!important;
+  }
+}
+
+/* The bottom dock is deliberately a reserved workspace, not a floating
+   overlay. This guarantees the Earth is rendered above it. */
+
+/* =========================================================
+   FINAL UI HOTFIX — TRUE PRODUCT LAYOUT
+   No panel is allowed to overlap another panel.
+   The globe gets its own uninterrupted viewport.
+   ========================================================= */
+:root{
+  --rail-left:350px;
+  --rail-right:350px;
+  --page-gap:14px;
+  --dock-h:168px;
+  --time-h:44px;
+}
+
+html,body{width:100%;height:100%;margin:0;overflow:hidden!important;background:#02060d}
+body{position:relative}
+
+/* The WebGL viewport is ONLY the space between the side rails and above the bottom dock. */
+#webgl-container{
+  position:absolute!important;
+  left:var(--rail-left)!important;
+  right:var(--rail-right)!important;
+  top:0!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 12px)!important;
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  z-index:1!important;
+  border-radius:0!important;
+}
+#webgl-container canvas{display:block!important;width:100%!important;height:100%!important}
+
+.ui-card{box-sizing:border-box!important}
+
+/* LEFT RAIL — three non-overlapping zones */
+#header-panel{
+  position:absolute!important;
+  left:12px!important;
+  top:12px!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:292px!important;
+  max-height:292px!important;
+  overflow:hidden!important;
+  z-index:10!important;
+}
+#station-panel{
+  position:absolute!important;
+  left:12px!important;
+  top:316px!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:calc(100vh - 316px - 122px)!important;
+  min-height:170px!important;
+  max-height:none!important;
+  overflow:auto!important;
+  z-index:10!important;
+}
+#overhead-panel{
+  position:absolute!important;
+  left:12px!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 12px)!important;
+  width:calc(var(--rail-left) - 24px)!important;
+  height:104px!important;
+  max-height:104px!important;
+  overflow:hidden!important;
+  z-index:10!important;
+}
+
+/* RIGHT RAIL — clean vertical information hierarchy */
+#provenance-panel{
+  position:absolute!important;
+  top:12px!important;
+  right:12px!important;
+  width:calc(var(--rail-right) - 24px)!important;
+  height:178px!important;
+  overflow:hidden!important;
+  z-index:10!important;
+}
+#filters-panel{
+  position:absolute!important;
+  top:202px!important;
+  right:12px!important;
+  width:calc(var(--rail-right) - 24px)!important;
+  height:188px!important;
+  overflow:auto!important;
+  z-index:10!important;
+}
+#detail-panel{
+  position:absolute!important;
+  top:402px!important;
+  right:12px!important;
+  bottom:calc(var(--dock-h) + var(--time-h) + 12px)!important;
+  width:calc(var(--rail-right) - 24px)!important;
+  min-height:120px!important;
+  overflow:auto!important;
+  z-index:10!important;
+}
+
+/* BOTTOM WORKSPACE — separate from the globe, never painted over it */
+#radar-panel{
+  position:absolute!important;
+  left:calc(var(--rail-left) + 12px)!important;
+  bottom:calc(var(--time-h) + 12px)!important;
+  width:180px!important;
+  height:var(--dock-h)!important;
+  padding:10px!important;
+  overflow:hidden!important;
+  z-index:12!important;
+  box-sizing:border-box!important;
+}
+#radar-panel h3{margin:0!important;font-size:.64rem!important;line-height:1.15!important}
+#radar-canvas{width:126px!important;height:126px!important;margin:6px auto 0!important;display:block!important}
+
+#pass-panel{
+  position:absolute!important;
+  left:calc(var(--rail-left) + 204px)!important;
+  right:calc(var(--rail-right) + 12px)!important;
+  bottom:calc(var(--time-h) + 12px)!important;
+  width:auto!important;
+  height:var(--dock-h)!important;
+  padding:10px!important;
+  overflow:hidden!important;
+  z-index:12!important;
+  box-sizing:border-box!important;
+}
+#pass-panel .pass-summary{height:100%!important;min-height:0!important}
+#pass-panel h4{margin:0 0 5px!important;font-size:.68rem!important}
+#pass-panel .pass-explainer{font-size:.56rem!important;line-height:1.2!important;margin:0 0 5px!important;padding:4px 6px!important}
+#pass-panel .pass-hero{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;margin-bottom:5px!important}
+#pass-panel .pass-metric{min-width:0!important;padding:5px 4px!important}
+#pass-panel .pass-metric-label{font-size:.52rem!important}
+#pass-panel .pass-metric-value{font-size:.67rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#pass-panel .pass-metric-sub{font-size:.47rem!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#pass-panel #pass-list{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4px!important;max-height:48px!important;overflow:auto!important;margin:0!important}
+#pass-panel .pass-card{margin:0!important;padding:4px 6px!important;font-size:.51rem!important;line-height:1.15!important;min-width:0!important}
+
+/* The technical explanation is in normal document flow — NEVER absolute. */
+#pass-technical-help{
+  position:static!important;
+  display:block!important;
+  width:auto!important;
+  margin:4px 0 0!important;
+  font-size:.52rem!important;
+}
+#pass-technical-help .expert-copy{max-height:90px;overflow:auto}
+
+/* TIME BAR — its own reserved strip */
+#time-panel{
+  position:absolute!important;
+  left:50%!important;
+  bottom:8px!important;
+  transform:translateX(-50%)!important;
+  z-index:30!important;
+  height:var(--time-h)!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  white-space:nowrap!important;
+}
+
+/* Remove accidental transforms / offsets from old UI layers */
+#header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel,#radar-panel,#pass-panel{transform:none!important}
+
+/* At modest desktop widths, shrink the rails rather than overlapping the center. */
+@media (max-width:1250px) and (min-width:901px){
+  :root{--rail-left:300px;--rail-right:300px;--dock-h:150px;--time-h:42px}
+  #header-panel{height:276px!important;max-height:276px!important}
+  #station-panel{top:288px!important;height:calc(100vh - 288px - 112px)!important;min-height:150px!important}
+  #overhead-panel{height:92px!important;max-height:92px!important}
+  #provenance-panel{height:160px!important}
+  #filters-panel{top:182px!important;height:176px!important}
+  #detail-panel{top:368px!important}
+  #radar-panel{width:150px!important;height:var(--dock-h)!important}
+  #radar-canvas{width:110px!important;height:110px!important}
+  #pass-panel{left:calc(var(--rail-left) + 164px)!important}
+}
+
+/* Mobile/tablet: convert the rails into normal page flow; nothing overlaps. */
+@media(max-width:900px){
+  html,body{overflow:auto!important;height:auto!important;min-height:100%!important}
+  #webgl-container{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:0!important;opacity:.20!important;z-index:0!important}
+  .ui-card{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:calc(100% - 24px)!important;height:auto!important;max-height:none!important;margin:12px!important;transform:none!important}
+  #header-panel{height:auto!important;max-height:none!important}
+  #station-panel{min-height:0!important}
+  #overhead-panel{height:auto!important;max-height:none!important}
+  #detail-panel{min-height:0!important}
+  #radar-panel,#pass-panel{width:calc(100% - 24px)!important;height:auto!important;min-height:180px!important}
+  #radar-panel{order:initial!important}
+  #pass-panel{order:initial!important}
+  #pass-panel #pass-list{max-height:140px!important;grid-template-columns:1fr!important}
+  #pass-technical-help{position:static!important}
+  #time-panel{position:fixed!important;left:50%!important;bottom:8px!important;z-index:50!important}
+}
+</style>
