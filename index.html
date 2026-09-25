@@ -42,9 +42,15 @@
 @media(max-width:640px){:root{--dock:330px}#dock{grid-template-columns:1fr}#radar-panel{min-height:150px}#pass-panel{min-height:170px}#pass-list{grid-template-columns:1fr}#pass-hero{grid-template-columns:1fr 1fr}#experience-panel{flex-wrap:wrap;justify-content:center}#experience-help{display:none}#ui-mode{min-width:190px}}
 
 /* ================= PHASE 6 — PRODUCT POLISH ================= */
-#product-actions{position:fixed;right:18px;top:14px;z-index:210;display:flex;gap:6px}
-.product-action{width:34px;height:34px;border:1px solid #29415a;border-radius:9px;background:rgba(7,15,25,.92);color:#bcd0e3;box-shadow:0 8px 22px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
-.product-action:hover{border-color:#4d83b7;color:#fff;background:#0c1a2a}
+#product-actions{position:fixed;right:22px;top:20px;z-index:240;display:flex;gap:6px;padding:4px;border:1px solid rgba(48,72,96,.72);border-radius:12px;background:rgba(4,10,17,.88);box-shadow:0 10px 26px rgba(0,0,0,.34);backdrop-filter:blur(14px)}
+.product-action{width:34px;height:34px;border:1px solid #29415a;border-radius:8px;background:#0a1622;color:#bcd0e3;box-shadow:none;display:grid;place-items:center;transition:background .16s,border-color .16s,color .16s,transform .16s}
+.product-action:hover{border-color:#4d83b7;color:#fff;background:#102338;transform:translateY(-1px)}
+#provenance-panel{padding-top:62px}
+#provenance-panel h3{position:relative}
+#product-actions::after{content:"";position:absolute;right:12px;top:-5px;width:6px;height:6px;border-radius:50%;background:#52d273;box-shadow:0 0 10px rgba(82,210,115,.45)}
+@media(max-width:1200px){#product-actions{right:18px;top:16px}#provenance-panel{padding-top:58px}}
+@media(max-width:980px){#product-actions{position:sticky;top:8px;right:auto;left:auto;width:max-content;margin:8px 10px 0 auto;z-index:260}#provenance-panel{padding-top:13px}}
+@media(max-width:700px){#product-actions{right:10px;top:10px;margin:6px 10px 0 auto}}
 #phase6-modal-backdrop,#onboarding-backdrop{position:fixed;inset:0;z-index:500;background:rgba(1,5,10,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}
 #phase6-modal-backdrop.open,#onboarding-backdrop.open{display:flex}
 .phase6-modal{width:min(520px,100%);max-height:min(760px,calc(100vh - 36px));overflow:auto;background:linear-gradient(180deg,#0a1624,#06101a);border:1px solid #29425c;border-radius:16px;box-shadow:0 28px 80px rgba(0,0,0,.55)}
@@ -59,6 +65,151 @@ body.reduced-motion *{scroll-behavior:auto!important;animation-duration:.001ms!i
 body.compact-product #globe-hint{display:none}body.hide-radar #radar-panel{display:none}body.hide-radar #dock{grid-template-columns:minmax(0,1fr)}
 @media(max-width:700px){#product-actions{right:10px;top:10px}.onboarding-steps{grid-template-columns:1fr}.phase6-modal{border-radius:13px}.phase6-modal-body{padding:14px}.onboarding-hero{padding:22px 20px 16px}.onboarding-actions{padding:11px 14px}}
 
+</style>
+
+<style id="professional-ui-refinement">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --ui-font:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --ui-text:#e8f0f7;
+  --ui-muted:#9aaabd;
+  --ui-dim:#78899c;
+}
+
+html,body,#app{font-family:var(--ui-font)!important}
+body{font-size:14px!important;letter-spacing:-.01em}
+
+/* Product-level typography: larger, calmer, easier to scan */
+#header-panel{padding:20px!important}
+#header-panel .intro{font-size:.82rem!important;line-height:1.55!important;color:#9fb0c2!important;max-width:290px}
+#header-panel h1{font-size:1.32rem!important;letter-spacing:-.025em}
+.search-box input{height:44px!important;font-size:.88rem!important;padding:0 13px!important}
+.primary{height:44px!important;font-size:.82rem!important}
+.tab-btn,.distance-btn{padding:8px 11px!important;font-size:.72rem!important;font-weight:600}
+.distance-title{font-size:.72rem!important}
+.distance-note{font-size:.64rem!important;line-height:1.45!important}
+
+/* Left rail information */
+#station-panel{padding:17px!important}
+#station-panel h3{font-size:.86rem!important}
+.station-help{font-size:.74rem!important;line-height:1.45!important}
+.station-search input{height:42px!important;font-size:.78rem!important}
+.station-search button,.station-location-actions button,.station-actions button{font-size:.72rem!important}
+.station-selected-title{font-size:.82rem!important}
+.station-selected-meta{font-size:.69rem!important}
+.station-grid label,.filter-grid label{font-size:.68rem!important}
+.station-grid input,.station-grid select{height:36px!important;font-size:.7rem!important}
+.station-advanced-toggle{font-size:.7rem!important}
+.station-meta{font-size:.65rem!important}
+
+#overhead-panel{padding:15px!important}
+#overhead-panel h3{font-size:.76rem!important}
+.sat-item{font-size:.72rem!important;padding:9px 10px!important}
+
+/* Center / globe */
+#status-banner{font-size:.7rem!important;padding:8px 13px!important}
+#globe-hint{font-size:.67rem!important;line-height:1.4!important;padding:9px 11px!important}
+
+/* Radar + pass area */
+#radar-panel{padding:12px!important}
+#radar-panel h3{font-size:.7rem!important}
+#pass-panel{padding:14px!important}
+#pass-title{font-size:.76rem!important}
+#pass-title span{font-size:.58rem!important}
+.pass-explainer{font-size:.65rem!important;line-height:1.45!important;padding:8px 10px!important}
+.pass-metric{padding:9px!important}
+.pass-metric-label{font-size:.58rem!important}
+.pass-metric-value{font-size:.8rem!important}
+.pass-metric-sub{font-size:.56rem!important}
+.pass-intel-label{font-size:.55rem!important}
+.pass-intel-value{font-size:.68rem!important}
+.pass-intel-sub{font-size:.52rem!important}
+.pass-card{font-size:.62rem!important;padding:7px 9px!important;line-height:1.35!important}
+.pass-meta{font-size:.56rem!important}
+
+/* Right rail: readable data hierarchy */
+#right-rail{padding-top:64px!important;position:relative!important}
+#provenance-panel{padding:16px!important;padding-top:14px!important;flex-basis:210px!important}
+#provenance-panel h3{font-size:.76rem!important}
+.prov-row{font-size:.63rem!important;margin:5px 0!important;line-height:1.35!important}
+.prov-label{color:#8495a8!important}
+.prov-value{color:#d4e0ea!important}
+.plain-badge{font-size:.57rem!important}
+#disclosure{font-size:.61rem!important;line-height:1.4!important;padding:9px!important}
+
+#filters-panel{padding:16px!important;flex-basis:225px!important}
+#filters-panel h3{font-size:.76rem!important}
+.check-row{font-size:.66rem!important;margin:7px 0!important}
+.filter-grid input{height:34px!important;font-size:.68rem!important}
+.export-btn{font-size:.64rem!important}
+.catalog-note{font-size:.59rem!important;line-height:1.4!important}
+
+#detail-panel{padding:16px!important}
+.detail-kicker{font-size:.59rem!important}
+.detail-title{font-size:1.18rem!important;letter-spacing:-.02em!important;margin:5px 0 10px!important}
+.sat-quick-info{font-size:.68rem!important;line-height:1.5!important;padding:10px!important}
+.sat-intelligence{padding:9px 10px!important}
+.intel-row{font-size:.63rem!important;line-height:1.4!important;padding:5px 0!important}
+.intel-row span{flex-basis:92px!important}
+.detail-disclosure{font-size:.63rem!important;line-height:1.45!important;padding:9px!important}
+.confidence-line{font-size:.64rem!important}
+.detail-list .prov-row{font-size:.64rem!important;margin:5px 0!important}
+.expert-details{font-size:.63rem!important}
+.expert-copy{font-size:.63rem!important;line-height:1.45!important}
+
+/* Time controls */
+#time-panel{gap:7px!important}
+.time-btn{font-size:.65rem!important;padding:7px 9px!important}
+#time-display{font-size:.66rem!important}
+
+/* Top controls: isolated from the data-health card */
+#product-actions{
+  position:fixed!important;
+  top:10px!important;
+  right:12px!important;
+  z-index:500!important;
+  gap:6px!important;
+  padding:5px!important;
+  border-radius:13px!important;
+  background:rgba(5,11,18,.96)!important;
+  border:1px solid #29445e!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.45)!important;
+}
+#product-actions button{
+  width:38px!important;height:38px!important;
+  border-radius:9px!important;
+  display:grid!important;place-items:center!important;
+  font-size:1rem!important;
+}
+#product-actions::after{right:8px!important;top:-4px!important;width:6px!important;height:6px!important}
+
+/* Mode selector gets product-level presence */
+#experience-panel{padding:9px 12px!important;border-radius:11px!important}
+#experience-panel .experience-label{font-size:.62rem!important}
+#ui-mode{height:38px!important;font-size:.74rem!important;min-width:220px!important}
+#experience-help{font-size:.61rem!important}
+
+/* Cards feel like a coherent product system rather than dense debug panels */
+.card{box-shadow:0 10px 28px rgba(0,0,0,.12)!important}
+#header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel,#radar-panel,#pass-panel,#time-panel{
+  background:linear-gradient(180deg,rgba(8,18,30,.97),rgba(5,13,22,.97))!important;
+}
+
+@media(max-width:1200px){
+  #right-rail{padding-top:60px!important}
+  #header-panel{padding:17px!important}
+  #header-panel .intro{font-size:.77rem!important}
+}
+@media(max-width:980px){
+  #right-rail{padding-top:0!important}
+  #product-actions{position:sticky!important;top:8px!important;right:auto!important;margin:8px 10px 0 auto!important;width:max-content!important}
+}
+@media(max-width:700px){
+  body{font-size:13px!important}
+  #product-actions button{width:36px!important;height:36px!important}
+  #ui-mode{min-width:180px!important;font-size:.7rem!important}
+}
 </style>
 </head>
 <body>
@@ -1188,7 +1339,7 @@ function animate(){requestAnimationFrame(animate);if(earthClouds)earthClouds.rot
 </script>
 
 <!-- PHASE 6 PRODUCT UI -->
-<div id="product-actions" aria-label="Product controls">
+<div id="product-actions" role="toolbar" aria-label="Product controls">
   <button class="product-action" id="help-btn" aria-label="Open help" title="Help"><i class="fas fa-question"></i></button>
   <button class="product-action" id="settings-btn" aria-label="Open settings" title="Settings"><i class="fas fa-sliders-h"></i></button>
 </div>
