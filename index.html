@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SatTracker 3D — Explorer</title>
+<title>SatTracker 3D — Explore & Track Satellites</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -40,6 +40,25 @@
 @media(max-width:1200px){:root{--left:270px;--right:285px;--gap:10px;--dock:190px}#header-panel{flex-basis:290px}#dock{grid-template-columns:160px minmax(0,1fr)}#radar-canvas{width:130px;height:130px}#pass-list{max-height:45px}}
 @media(max-width:980px){html,body{overflow:auto}#app{height:auto;min-height:100vh;grid-template-columns:1fr;overflow:visible}.rail{overflow:visible}#center{min-height:760px;order:-1}#right-rail{order:2}#header-panel,#station-panel,#overhead-panel,#provenance-panel,#filters-panel,#detail-panel{flex:none;height:auto;max-height:none}#header-panel{min-height:290px}#station-panel{min-height:260px}#overhead-panel{min-height:120px}#provenance-panel{max-height:420px}#filters-panel{max-height:520px}#detail-panel{max-height:520px}#experience-panel{position:sticky;top:8px;left:auto;transform:none;width:max-content;max-width:calc(100% - 16px);margin:8px auto;z-index:200}}
 @media(max-width:640px){:root{--dock:330px}#dock{grid-template-columns:1fr}#radar-panel{min-height:150px}#pass-panel{min-height:170px}#pass-list{grid-template-columns:1fr}#pass-hero{grid-template-columns:1fr 1fr}#experience-panel{flex-wrap:wrap;justify-content:center}#experience-help{display:none}#ui-mode{min-width:190px}}
+
+/* ================= PHASE 6 — PRODUCT POLISH ================= */
+#product-actions{position:fixed;right:18px;top:14px;z-index:210;display:flex;gap:6px}
+.product-action{width:34px;height:34px;border:1px solid #29415a;border-radius:9px;background:rgba(7,15,25,.92);color:#bcd0e3;box-shadow:0 8px 22px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
+.product-action:hover{border-color:#4d83b7;color:#fff;background:#0c1a2a}
+#phase6-modal-backdrop,#onboarding-backdrop{position:fixed;inset:0;z-index:500;background:rgba(1,5,10,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}
+#phase6-modal-backdrop.open,#onboarding-backdrop.open{display:flex}
+.phase6-modal{width:min(520px,100%);max-height:min(760px,calc(100vh - 36px));overflow:auto;background:linear-gradient(180deg,#0a1624,#06101a);border:1px solid #29425c;border-radius:16px;box-shadow:0 28px 80px rgba(0,0,0,.55)}
+.phase6-modal-head{display:flex;justify-content:space-between;align-items:center;padding:17px 18px;border-bottom:1px solid #1c3045;position:sticky;top:0;background:rgba(8,18,30,.97);z-index:2}
+.phase6-modal-head h2{font-size:1rem;color:#edf5fc}.phase6-close{border:0;background:transparent;color:#8fa1b3;font-size:1.05rem;width:32px;height:32px;border-radius:7px}.phase6-close:hover{background:#122336;color:#fff}
+.phase6-modal-body{padding:17px 18px}.phase6-section{margin-bottom:18px}.phase6-section:last-child{margin-bottom:0}.phase6-section h3{font-size:.64rem;color:#8fb9df;margin-bottom:8px}.phase6-section p{font-size:.68rem;line-height:1.5;color:#aab8c7;margin:0}
+.setting-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(35,55,75,.55)}.setting-row:last-child{border-bottom:0}.setting-copy strong{display:block;font-size:.68rem;color:#e1eaf2}.setting-copy span{display:block;font-size:.56rem;line-height:1.35;color:#74869a;margin-top:2px}
+.setting-control{flex:0 0 auto}.setting-control select{height:32px;min-width:115px;border:1px solid #2a4057;border-radius:7px;background:#07111b;color:#dce7f1;padding:0 8px;font-size:.61rem}.toggle{position:relative;width:42px;height:23px;border-radius:99px;background:#182839;border:1px solid #30485e;cursor:pointer}.toggle::after{content:"";position:absolute;width:17px;height:17px;left:2px;top:2px;border-radius:50%;background:#8293a5;transition:.16s}.toggle.on{background:#166dcc;border-color:#2f8af0}.toggle.on::after{transform:translateX(18px);background:#fff}
+#onboarding-card{width:min(620px,100%);background:linear-gradient(180deg,#0b1827,#06101a);border:1px solid #2b4965;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden}.onboarding-hero{padding:27px 27px 20px;background:radial-gradient(circle at 50% 0,rgba(53,133,235,.18),transparent 55%)}.onboarding-kicker{font-size:.55rem;color:#65aef5;text-transform:uppercase;letter-spacing:.14em}.onboarding-hero h1{font-size:1.55rem;margin:7px 0 7px}.onboarding-hero p{font-size:.7rem;color:#9eafc0;line-height:1.5;margin:0;max-width:510px}.onboarding-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 18px 18px}.onboarding-step{padding:12px;border:1px solid #1c344b;border-radius:10px;background:#07131f}.onboarding-step i{font-size:1rem;color:#61aef8}.onboarding-step strong{display:block;font-size:.65rem;color:#e2ebf3;margin:7px 0 3px}.onboarding-step span{display:block;font-size:.54rem;line-height:1.4;color:#7f90a2}.onboarding-actions{display:flex;justify-content:flex-end;gap:7px;padding:13px 18px;border-top:1px solid #1c3045;background:#07111b}.onboarding-actions button{border:1px solid #2a425a;background:#101f2e;color:#cbd8e4;border-radius:8px;padding:8px 12px;font-size:.62rem}.onboarding-actions .primary-action{background:#2674df;border-color:#2674df;color:#fff;font-weight:700}
+.phase6-toast{position:fixed;left:50%;bottom:72px;transform:translate(-50%,10px);z-index:600;background:#0a1725;border:1px solid #2b4761;color:#dbe8f3;border-radius:9px;padding:8px 12px;font-size:.61rem;box-shadow:0 12px 35px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s}.phase6-toast.show{opacity:1;transform:translate(-50%,0)}
+body.reduced-motion *{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}body.reduced-motion #webgl-container{filter:none}
+body.compact-product #globe-hint{display:none}body.hide-radar #radar-panel{display:none}body.hide-radar #dock{grid-template-columns:minmax(0,1fr)}
+@media(max-width:700px){#product-actions{right:10px;top:10px}.onboarding-steps{grid-template-columns:1fr}.phase6-modal{border-radius:13px}.phase6-modal-body{padding:14px}.onboarding-hero{padding:22px 20px 16px}.onboarding-actions{padding:11px 14px}}
+
 </style>
 </head>
 <body>
@@ -1167,4 +1186,101 @@ function animate(){requestAnimationFrame(animate);if(earthClouds)earthClouds.rot
 })();
 
 </script>
+
+<!-- PHASE 6 PRODUCT UI -->
+<div id="product-actions" aria-label="Product controls">
+  <button class="product-action" id="help-btn" aria-label="Open help" title="Help"><i class="fas fa-question"></i></button>
+  <button class="product-action" id="settings-btn" aria-label="Open settings" title="Settings"><i class="fas fa-sliders-h"></i></button>
+</div>
+
+<div id="phase6-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="phase6-modal-title">
+  <div class="phase6-modal">
+    <div class="phase6-modal-head"><h2 id="phase6-modal-title">Settings</h2><button class="phase6-close" data-close-modal aria-label="Close settings"><i class="fas fa-times"></i></button></div>
+    <div class="phase6-modal-body">
+      <section class="phase6-section"><h3>VIEW</h3>
+        <div class="setting-row"><div class="setting-copy"><strong>Interface mode</strong><span>Switch between simple Explorer and full Technical view.</span></div><div class="setting-control"><select id="setting-mode"><option value="explorer">Explorer</option><option value="technical">Technical</option></select></div></div>
+        <div class="setting-row"><div class="setting-copy"><strong>Visual quality</strong><span>Lower quality can improve performance on older laptops and phones.</span></div><div class="setting-control"><select id="setting-quality"><option value="low">Performance</option><option value="medium">Balanced</option><option value="high">Quality</option></select></div></div>
+      </section>
+      <section class="phase6-section"><h3>VISUALS</h3>
+        <div class="setting-row"><div class="setting-copy"><strong>Earth clouds</strong><span>Show the moving cloud layer around Earth.</span></div><div class="setting-control"><button class="toggle on" id="toggle-clouds" aria-label="Toggle Earth clouds" aria-pressed="true"></button></div></div>
+        <div class="setting-row"><div class="setting-copy"><strong>Atmosphere glow</strong><span>Show the blue atmospheric rim around Earth.</span></div><div class="setting-control"><button class="toggle on" id="toggle-atmosphere" aria-label="Toggle atmosphere glow" aria-pressed="true"></button></div></div>
+        <div class="setting-row"><div class="setting-copy"><strong>Sky radar</strong><span>Show or hide the radar panel below the globe.</span></div><div class="setting-control"><button class="toggle on" id="toggle-radar" aria-label="Toggle sky radar" aria-pressed="true"></button></div></div>
+        <div class="setting-row"><div class="setting-copy"><strong>Reduced motion</strong><span>Reduce UI animation and non-essential movement.</span></div><div class="setting-control"><button class="toggle" id="toggle-motion" aria-label="Toggle reduced motion" aria-pressed="false"></button></div></div>
+      </section>
+      <section class="phase6-section"><h3>ABOUT</h3><p>SatTracker visualizes satellite positions from catalog orbital data using SGP4/SDP4 propagation. Positions shown on the globe are calculated predictions, not live onboard telemetry or observation data. Catalog data is served through the SatTracker backend from CelesTrak GP feeds.</p></section>
+      <section class="phase6-section"><h3>KEYBOARD</h3><p><b>Esc</b> closes dialogs or the selected satellite. <b>Tab</b> moves through controls. Use the globe controls to rotate and zoom. Search accepts satellite names and NORAD IDs.</p></section>
+    </div>
+  </div>
+</div>
+
+<div id="onboarding-backdrop" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+  <div id="onboarding-card">
+    <div class="onboarding-hero"><div class="onboarding-kicker">SATELLITE TRACKER</div><h1 id="onboarding-title">Explore what is above you.</h1><p>Track catalog satellites around Earth, find upcoming passes, and switch to Technical mode whenever you want the full orbital picture.</p></div>
+    <div class="onboarding-steps">
+      <div class="onboarding-step"><i class="fas fa-globe-americas"></i><strong>Explore Earth</strong><span>Drag to rotate the globe and scroll to zoom. Satellite markers stay lightweight for smooth tracking.</span></div>
+      <div class="onboarding-step"><i class="fas fa-search"></i><strong>Find a satellite</strong><span>Search by name or NORAD ID, choose a collection, or use the altitude filters.</span></div>
+      <div class="onboarding-step"><i class="fas fa-broadcast-tower"></i><strong>Track a pass</strong><span>Set your location and see AOS, highest elevation, LOS and the next visible pass.</span></div>
+    </div>
+    <div class="onboarding-actions"><button id="onboarding-skip">Skip intro</button><button class="primary-action" id="onboarding-start">Start exploring <i class="fas fa-arrow-right"></i></button></div>
+  </div>
+</div>
+<div class="phase6-toast" id="phase6-toast" role="status" aria-live="polite"></div>
+
+
+<script>
+/* ================= PHASE 6 — PRODUCT POLISH LOGIC ================= */
+(function(){
+  const $=id=>document.getElementById(id);
+  const toastEl=$('phase6-toast');
+  let toastTimer=null;
+  function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2200)}
+  function modal(open){const el=$('phase6-modal-backdrop');if(el)el.classList.toggle('open',open);if(open){const mode=document.getElementById('ui-mode');if(mode)$('setting-mode').value=mode.value;}}
+  function setToggle(id,on){const b=$(id);if(!b)return;b.classList.toggle('on',!!on);b.setAttribute('aria-pressed',on?'true':'false')}
+  function save(key,value){try{localStorage.setItem('sattracker-'+key,String(value))}catch(e){}}
+  function get(key,fallback){try{const v=localStorage.getItem('sattracker-'+key);return v===null?fallback:v}catch(e){return fallback}}
+  function applyQuality(q,announceIt=true){
+    if(!renderer)return;
+    const ratio=q==='low'?Math.min(devicePixelRatio,1):q==='high'?Math.min(devicePixelRatio,1.75):Math.min(devicePixelRatio,1.35);
+    renderer.setPixelRatio(ratio);
+    document.body.classList.toggle('compact-product',q==='low');
+    save('quality',q);
+    if(announceIt)toast(q==='low'?'Performance mode enabled.':'Visual quality set to '+(q==='high'?'Quality':'Balanced')+'.');
+  }
+  function applyVisualSetting(name,on,announceIt=true){
+    if(name==='clouds'&&earthClouds)earthClouds.visible=on;
+    if(name==='atmosphere'&&atmosphereMesh)atmosphereMesh.visible=on;
+    if(name==='radar')document.body.classList.toggle('hide-radar',!on);
+    if(name==='motion')document.body.classList.toggle('reduced-motion',on);
+    save(name,on?'1':'0');
+    if(announceIt)toast((on?'Enabled: ':'Disabled: ')+name.replace('-',' '));
+  }
+  function loadSettings(){
+    const q=get('quality','medium');if($('setting-quality'))$('setting-quality').value=q;applyQuality(q,false);
+    const clouds=get('clouds','1')==='1',atmo=get('atmosphere','1')==='1',radar=get('radar','1')==='1',motion=get('motion','0')==='1';
+    setToggle('toggle-clouds',clouds);setToggle('toggle-atmosphere',atmo);setToggle('toggle-radar',radar);setToggle('toggle-motion',motion);
+    applyVisualSetting('clouds',clouds,false);applyVisualSetting('atmosphere',atmo,false);applyVisualSetting('radar',radar,false);applyVisualSetting('motion',motion,false);
+  }
+  function closeAll(){modal(false);$('onboarding-backdrop')?.classList.remove('open')}
+  $('settings-btn')?.addEventListener('click',()=>modal(true));
+  $('help-btn')?.addEventListener('click',()=>{
+    const b=$('onboarding-backdrop');if(b){b.classList.add('open');$('onboarding-start').textContent='Got it — explore';}
+  });
+  document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>modal(false)));
+  $('phase6-modal-backdrop')?.addEventListener('click',e=>{if(e.target===e.currentTarget)modal(false)});
+  $('onboarding-backdrop')?.addEventListener('click',e=>{if(e.target===e.currentTarget)$('onboarding-backdrop').classList.remove('open')});
+  $('onboarding-skip')?.addEventListener('click',()=>{save('onboarding-seen','1');$('onboarding-backdrop').classList.remove('open')});
+  $('onboarding-start')?.addEventListener('click',()=>{save('onboarding-seen','1');$('onboarding-backdrop').classList.remove('open');toast('Ready. Select a satellite to start tracking.')});
+  $('setting-quality')?.addEventListener('change',e=>applyQuality(e.target.value));
+  $('setting-mode')?.addEventListener('change',e=>{const mode=document.getElementById('ui-mode');if(mode){mode.value=e.target.value;mode.dispatchEvent(new Event('change'))} });
+  [['toggle-clouds','clouds'],['toggle-atmosphere','atmosphere'],['toggle-radar','radar'],['toggle-motion','motion']].forEach(([id,key])=>$(id)?.addEventListener('click',e=>{const on=!e.currentTarget.classList.contains('on');setToggle(id,on);applyVisualSetting(key,on)}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('phase6-modal-backdrop')?.classList.contains('open'))modal(false);else if($('onboarding-backdrop')?.classList.contains('open'))$('onboarding-backdrop').classList.remove('open')}});
+  window.addEventListener('resize',()=>{if(typeof onWindowResize==='function')onWindowResize()});
+  const boot=()=>{
+    loadSettings();
+    if(get('onboarding-seen','0')!=='1')setTimeout(()=>$('onboarding-backdrop')?.classList.add('open'),900);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
 </body></html>
