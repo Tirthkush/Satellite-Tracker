@@ -211,6 +211,248 @@ body{font-size:14px!important;letter-spacing:-.01em}
   #ui-mode{min-width:180px!important;font-size:.7rem!important}
 }
 </style>
+
+<style id="production-ui-lock">
+/* ================= PRODUCTION UI LOCK =================
+   Final front-end hierarchy. Backend/API untouched. */
+:root{
+  --left:320px;
+  --right:330px;
+  --gap:14px;
+  --dock:220px;
+  --time:54px;
+  --panel-radius:14px;
+  --line2:#22364b;
+  --soft:#0a1623;
+  --text:#edf4fa;
+  --muted2:#9aabbd;
+  --dim2:#74869a;
+  --accent:#4da3ff;
+}
+
+html,body{font-size:14px!important}
+#app{
+  grid-template-columns:var(--left) minmax(0,1fr) var(--right)!important;
+  gap:var(--gap)!important;
+  padding:14px!important;
+}
+.rail{gap:12px!important;overflow:hidden!important}
+.card{
+  border-radius:var(--panel-radius)!important;
+  border-color:#1d3043!important;
+  background:linear-gradient(180deg,rgba(9,19,31,.985),rgba(5,12,20,.985))!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.18)!important;
+}
+.card-head{margin-bottom:10px!important}
+
+/* -------- LEFT / EXPLORE -------- */
+#header-panel{
+  flex:0 0 358px!important;
+  min-height:358px!important;
+  padding:18px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#header-panel h1{font-size:1.38rem!important;line-height:1.2!important}
+#header-panel .intro{
+  font-size:.79rem!important;
+  line-height:1.52!important;
+  max-width:100%!important;
+  margin:8px 0 13px!important;
+}
+.search-box input{
+  height:46px!important;
+  font-size:.86rem!important;
+  border-radius:9px!important;
+}
+#header-panel .primary{
+  height:44px!important;
+  margin-top:8px!important;
+  border-radius:9px!important;
+  font-size:.79rem!important;
+}
+.category-tabs{
+  gap:6px!important;
+  margin-top:10px!important;
+}
+.tab-btn{
+  min-height:34px!important;
+  padding:7px 11px!important;
+  font-size:.72rem!important;
+  border-radius:8px!important;
+}
+#header-panel .distance-filter{
+  margin:12px 0 0!important;
+  padding:11px 11px 10px!important;
+  border:1px solid #20364d!important;
+  border-radius:10px!important;
+  background:linear-gradient(180deg,rgba(8,20,33,.98),rgba(6,15,25,.98))!important;
+  flex:0 0 auto!important;
+  position:relative!important;
+  z-index:4!important;
+}
+#header-panel .distance-title{
+  font-size:.78rem!important;
+  line-height:1.2!important;
+  font-weight:700!important;
+  color:#c7d5e2!important;
+  letter-spacing:.06em!important;
+}
+#header-panel .distance-tabs{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:6px!important;
+  margin-top:9px!important;
+}
+#header-panel .distance-btn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:36px!important;
+  padding:7px 5px!important;
+  font-size:.72rem!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+  border-radius:8px!important;
+}
+#header-panel .distance-note{
+  margin-top:7px!important;
+  font-size:.63rem!important;
+  line-height:1.35!important;
+  color:#8193a6!important;
+}
+#header-panel .expert-details{margin-top:6px!important}
+#header-panel .expert-details summary{font-size:.62rem!important}
+#search-results{max-height:44px!important;overflow:auto!important;margin-top:6px!important}
+
+#station-panel{padding:16px!important}
+#station-panel h3{font-size:.84rem!important}
+.station-help{font-size:.72rem!important}
+.station-search input{height:42px!important;font-size:.76rem!important}
+.station-search button,.station-location-actions button{font-size:.70rem!important}
+
+#overhead-panel{padding:14px!important}
+#overhead-panel h3{font-size:.78rem!important}
+.sat-item{font-size:.70rem!important;padding:8px 10px!important}
+
+/* -------- CENTER / GLOBE -------- */
+#center{grid-template-rows:minmax(0,1fr) var(--dock) var(--time)!important}
+#globe-card{border-radius:14px!important}
+#status-banner{font-size:.68rem!important;padding:8px 12px!important}
+#globe-hint{font-size:.67rem!important;line-height:1.4!important;max-width:270px!important}
+#dock{grid-template-columns:194px minmax(0,1fr)!important;gap:10px!important}
+#radar-panel{padding:11px!important}
+#radar-panel h3{font-size:.66rem!important}
+#radar-canvas{width:158px!important;height:158px!important}
+#pass-panel{padding:12px!important}
+#pass-title{font-size:.72rem!important}
+.pass-explainer{font-size:.59rem!important;line-height:1.4!important}
+.pass-metric-label{font-size:.51rem!important}
+.pass-metric-value{font-size:.72rem!important}
+.pass-metric-sub{font-size:.49rem!important}
+.pass-intel-label{font-size:.48rem!important}
+.pass-intel-value{font-size:.62rem!important}
+.pass-intel-sub{font-size:.46rem!important}
+
+#time-panel{gap:8px!important}
+.time-btn{font-size:.65rem!important;padding:7px 9px!important;border-radius:8px!important}
+#time-display{font-size:.67rem!important}
+
+/* -------- RIGHT / ANALYST -------- */
+#right-rail{padding-top:0!important;overflow:hidden!important;position:relative!important}
+#provenance-panel{
+  flex:0 0 196px!important;
+  padding:15px!important;
+  overflow:auto!important;
+}
+#provenance-panel h3,#filters-panel h3{font-size:.78rem!important}
+.prov-row{font-size:.62rem!important;line-height:1.35!important;margin:5px 0!important}
+.prov-label{font-size:.61rem!important}
+.prov-value{font-size:.62rem!important}
+.plain-badge{font-size:.56rem!important}
+#disclosure{font-size:.60rem!important;line-height:1.4!important}
+#filters-panel{
+  flex:0 0 214px!important;
+  padding:15px!important;
+  overflow:auto!important;
+}
+.check-row{font-size:.65rem!important;margin:7px 0!important}
+.filter-grid{gap:7px!important}
+.filter-grid label{font-size:.64rem!important}
+.filter-grid input{height:34px!important;font-size:.67rem!important}
+.export-btn{font-size:.63rem!important}
+.catalog-note{font-size:.57rem!important;line-height:1.4!important}
+#detail-panel{padding:16px!important}
+.detail-kicker{font-size:.60rem!important}
+.detail-title{font-size:1.20rem!important}
+.sat-quick-info{font-size:.69rem!important;line-height:1.52!important}
+.intel-row{font-size:.64rem!important;line-height:1.4!important;padding:5px 0!important}
+.detail-disclosure{font-size:.62rem!important;line-height:1.45!important}
+.detail-list .prov-row{font-size:.63rem!important}
+.expert-details,.expert-details .expert-copy{font-size:.62rem!important}
+
+/* -------- GLOBAL CONTROLS -------- */
+#product-actions{
+  top:12px!important;
+  right:14px!important;
+  z-index:600!important;
+  padding:4px!important;
+  gap:6px!important;
+  border-radius:12px!important;
+}
+#product-actions button{
+  width:38px!important;
+  height:38px!important;
+  border-radius:9px!important;
+  font-size:.98rem!important;
+}
+#experience-panel{
+  top:14px!important;
+  padding:8px 11px!important;
+  border-radius:11px!important;
+}
+#experience-panel .experience-label{font-size:.59rem!important}
+#ui-mode{height:38px!important;min-width:220px!important;font-size:.72rem!important}
+
+/* Prevent cards from acquiring accidental flex collapse. */
+#left-rail,#right-rail{min-height:0!important}
+#station-panel,#detail-panel{min-height:0!important}
+
+@media(max-height:800px) and (min-width:981px){
+  #header-panel{flex-basis:348px!important;min-height:348px!important;padding:16px!important}
+  #header-panel .intro{font-size:.75rem!important;margin-bottom:10px!important}
+  #header-panel .distance-filter{margin-top:9px!important;padding:9px 10px!important}
+  #header-panel .distance-btn{min-height:34px!important}
+  #header-panel .distance-note{display:none!important}
+  #header-panel .expert-details{margin-top:4px!important}
+  #provenance-panel{flex-basis:182px!important}
+  #filters-panel{flex-basis:198px!important}
+  :root{--dock:210px!important;--time:52px!important}
+}
+
+@media(max-width:1250px) and (min-width:981px){
+  :root{--left:300px;--right:305px;--gap:11px}
+  #header-panel{flex-basis:356px!important;min-height:356px!important}
+  #dock{grid-template-columns:176px minmax(0,1fr)!important}
+  #radar-canvas{width:142px!important;height:142px!important}
+  #ui-mode{min-width:200px!important}
+}
+
+@media(max-width:980px){
+  #app{grid-template-columns:1fr!important}
+  #header-panel{flex-basis:auto!important;min-height:0!important}
+  #header-panel .distance-tabs{grid-template-columns:repeat(4,minmax(70px,1fr))!important}
+  #right-rail{padding-top:0!important}
+}
+@media(max-width:640px){
+  #header-panel .distance-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #dock{grid-template-columns:1fr!important}
+  #radar-canvas{width:150px!important;height:150px!important}
+  #product-actions{right:10px!important;top:10px!important}
+  #experience-panel{top:8px!important}
+}
+</style>
+
 </head>
 <body>
 <div id="app">
