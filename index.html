@@ -977,6 +977,87 @@ html,body{font-size:16px!important;background:#050a10!important}
 }
 </style>
 
+
+<style id="sattracker-final-professional-ui">
+/* ================== FINAL PROFESSIONAL UI PASS ================== */
+
+/* Right rail is an intentional scroll surface in Technical mode. */
+@media(min-width:981px){
+  #right-rail{
+    overflow-y:scroll!important;
+    overflow-x:hidden!important;
+    padding-top:70px!important;
+    scrollbar-width:auto!important;
+    scrollbar-color:#41647f #07101a!important;
+  }
+  #right-rail::-webkit-scrollbar{width:9px!important}
+  #right-rail::-webkit-scrollbar-track{background:#07101a!important;border-radius:10px}
+  #right-rail::-webkit-scrollbar-thumb{background:#41647f!important;border-radius:10px;border:2px solid #07101a}
+  #right-rail > .card{flex:0 0 auto!important}
+  .technical-mode #right-rail #provenance-panel{flex-basis:300px!important;min-height:300px!important}
+  .technical-mode #right-rail #filters-panel{flex-basis:300px!important;min-height:300px!important}
+  .technical-mode #right-rail #detail-panel{flex:0 0 auto!important;min-height:520px!important}
+}
+
+/* Explorer gets a compact empty detail state; selection expands it. */
+#detail-panel:not(.has-selection){
+  flex:0 0 178px!important;
+  min-height:178px!important;
+}
+#detail-panel:not(.has-selection) .sat-telemetry,
+#detail-panel:not(.has-selection) .sat-intelligence,
+#detail-panel:not(.has-selection) .detail-list,
+#detail-panel:not(.has-selection) .confidence-line,
+#detail-panel:not(.has-selection) .detail-disclosure,
+#detail-panel:not(.has-selection) .detail-actions,
+#detail-panel:not(.has-selection) .expert-details{
+  display:none!important;
+}
+#detail-panel:not(.has-selection) .detail-title{
+  margin-top:10px!important;
+  color:#94a9bb!important;
+}
+#detail-panel:not(.has-selection) .sat-quick-info{
+  margin-top:12px!important;
+  min-height:72px!important;
+  display:flex!important;
+  align-items:center!important;
+  color:#8ea0b1!important;
+}
+
+/* Selected satellite card reads as the main information surface. */
+#detail-panel.has-selection{
+  border-color:#315a78!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.28),inset 0 0 0 1px rgba(77,163,255,.05)!important;
+}
+
+/* Technical typography: less tiny, more readable without bloating. */
+.technical-mode #right-rail .card h3{font-size:.78rem!important}
+.technical-mode #right-rail .prov-row{font-size:.64rem!important;margin:5px 0!important}
+.technical-mode #right-rail .prov-label{font-size:.58rem!important}
+.technical-mode #right-rail .prov-value{font-size:.62rem!important}
+.technical-mode #right-rail .check-row{font-size:.63rem!important}
+.technical-mode #right-rail .catalog-note{font-size:.56rem!important}
+
+/* Product controls no longer crowd content. */
+#experience-panel{z-index:270!important}
+#product-actions{z-index:271!important}
+
+/* Debris is intentionally distinct and always visible. */
+.debris-visibility-note{
+  display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 9px;
+  border:1px solid #4d3b33;border-radius:8px;background:#19110d;
+  color:#c8aa9b;font-size:.56rem;line-height:1.3;
+}
+.debris-visibility-dot{width:9px;height:9px;border-radius:50%;background:#ff9b63;box-shadow:0 0 9px rgba(255,155,99,.7);flex:0 0 auto}
+
+/* Better responsive collapse: right rail becomes a normal page section. */
+@media(max-width:980px){
+  #right-rail{overflow:visible!important;padding-top:0!important}
+  #detail-panel:not(.has-selection){flex:0 0 auto!important;min-height:154px!important}
+}
+</style>
+
 </head>
 <body>
 <div id="app">
@@ -2373,6 +2454,175 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(share)share.disabled=!selectedSatellite;
   if(track)track.disabled=!selectedSatellite;
 });
+</script>
+
+
+<script id="sattracker-final-behavior">
+(function(){
+  'use strict';
+
+  /* ---------------- Debris visibility fix ----------------
+     The previous update path returned early when the normal satellite point
+     layer was absent (which happens for a debris-only catalog). Keep debris
+     updates independent so FY-1C fragments always move and remain visible.
+  */
+  if(typeof updateSatelliteIconGeometry==='function'){
+    const oldSync=updateSatelliteIconGeometry;
+    updateSatelliteIconGeometry=function(){
+      if(satellitePoints){
+        const pos=satellitePoints.geometry.attributes.position;
+        const colors=satellitePoints.geometry.attributes.color;
+        const idxs=satellitePoints.userData.satIndices||[];
+        for(let i=0;i<idxs.length;i++){
+          const sat=filteredSatellites[idxs[i]];
+          if(!sat?.positionVector)continue;
+          pos.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z);
+          const c=satelliteBandColor(sat.orbitBand);
+          colors.setXYZ(i,c.r,c.g,c.b);
+        }
+        pos.needsUpdate=true;colors.needsUpdate=true;
+      }
+      if(debrisPoints){
+        const p=debrisPoints.geometry.attributes.position;
+        const idx=debrisPoints.userData.satIndices||[];
+        for(let i=0;i<idx.length;i++){
+          const sat=filteredSatellites[idx[i]];
+          if(!sat?.positionVector)continue;
+          p.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z);
+        }
+        p.needsUpdate=true;
+      }
+    };
+  }
+
+  /* Strong, fixed-size debris marker: visible at both near and far zoom. */
+  if(typeof rebuildSatellitePointsMesh==='function'){
+    const oldRebuild=rebuildSatellitePointsMesh;
+    rebuildSatellitePointsMesh=function(){
+      oldRebuild();
+      if(debrisPoints){
+        debrisPoints.material.size=6.5;
+        debrisPoints.material.sizeAttenuation=false;
+        debrisPoints.material.opacity=.98;
+        debrisPoints.material.transparent=true;
+        debrisPoints.material.depthWrite=false;
+        debrisPoints.material.depthTest=true;
+        debrisPoints.material.color.set(0xff9b63);
+        debrisPoints.material.vertexColors=false;
+        debrisPoints.material.needsUpdate=true;
+        debrisPoints.renderOrder=22;
+      }
+    };
+  }
+
+  /* ---------------- Track camera restore ----------------
+     Save the pre-track camera view and smoothly restore it when tracking is
+     released, selection changes, or the close button is used.
+  */
+  let preTrackView=null;
+  let restoreView=null;
+  let restoreStart=null;
+  let restoreStartedAt=0;
+
+  function capturePreTrackView(){
+    if(!camera||!controls)return;
+    preTrackView={
+      position:camera.position.clone(),
+      target:controls.target.clone(),
+      fov:camera.fov
+    };
+  }
+
+  function beginRestoreView(){
+    if(!preTrackView||!camera||!controls)return;
+    restoreView={
+      position:preTrackView.position.clone(),
+      target:preTrackView.target.clone(),
+      fov:preTrackView.fov
+    };
+    restoreStart={
+      position:camera.position.clone(),
+      target:controls.target.clone(),
+      fov:camera.fov
+    };
+    restoreStartedAt=performance.now();
+    preTrackView=null;
+  }
+
+  if(typeof startSatelliteTracking==='function'){
+    const oldStart=startSatelliteTracking;
+    startSatelliteTracking=function(){
+      if(!isSatelliteTracking)capturePreTrackView();
+      restoreView=null;
+      oldStart();
+    };
+  }
+
+  if(typeof stopSatelliteTracking==='function'){
+    const oldStop=stopSatelliteTracking;
+    stopSatelliteTracking=function(silent=false){
+      const wasTracking=!!isSatelliteTracking;
+      oldStop(silent);
+      if(wasTracking)beginRestoreView();
+    };
+  }
+
+  if(typeof updateTrackingCamera==='function'){
+    const oldUpdate=updateTrackingCamera;
+    updateTrackingCamera=function(){
+      if(restoreView&&camera&&controls){
+        const t=Math.min(1,(performance.now()-restoreStartedAt)/420);
+        const eased=1-Math.pow(1-t,3);
+        camera.position.lerpVectors(restoreStart.position,restoreView.position,eased);
+        controls.target.lerpVectors(restoreStart.target,restoreView.target,eased);
+        camera.fov=THREE.MathUtils.lerp(restoreStart.fov,restoreView.fov,eased);
+        camera.updateProjectionMatrix();
+        controls.update();
+        if(t>=1){
+          camera.position.copy(restoreView.position);
+          controls.target.copy(restoreView.target);
+          camera.fov=restoreView.fov;
+          camera.updateProjectionMatrix();
+          controls.update();
+          restoreView=null;
+          restoreStart=null;
+        }
+        return;
+      }
+      oldUpdate();
+    };
+  }
+
+  /* If selecting another satellite while tracking, restore the old POV first. */
+  if(typeof selectSatelliteByNorad==='function'){
+    const oldSelect=selectSatelliteByNorad;
+    selectSatelliteByNorad=function(id){
+      if(isSatelliteTracking)stopSatelliteTracking(true);
+      return oldSelect(id);
+    };
+  }
+
+  const closeBtn=document.getElementById('close-detail');
+  if(closeBtn){
+    closeBtn.addEventListener('click',()=>{
+      if(isSatelliteTracking)stopSatelliteTracking(true);
+    },{capture:true});
+  }
+
+  /* Make the right rail's scroll state obvious in Technical mode. */
+  function refreshRailMode(){
+    const rail=document.getElementById('right-rail');
+    if(!rail)return;
+    rail.style.overflowY=document.body.classList.contains('technical-mode')?'scroll':'';
+  }
+  const modeSelect=document.getElementById('ui-mode');
+  if(modeSelect)modeSelect.addEventListener('change',()=>setTimeout(refreshRailMode,30));
+  setTimeout(refreshRailMode,1500);
+
+  /* Tiny detail hint when nothing is selected. */
+  const hint=document.getElementById('sat-quick-info');
+  if(hint&&!selectedSatellite)hint.textContent='Select a satellite from the globe, radar, or list to inspect it and start tracking.';
+})();
 </script>
 
 </body></html>
