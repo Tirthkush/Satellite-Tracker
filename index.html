@@ -1059,97 +1059,34 @@ html,body{font-size:16px!important;background:#050a10!important}
 </style>
 
 
-<style id="final-corrective-ui">
-/* Final corrective layer: never hides core satellite controls. */
-.detail-actions{
+<style id="debris-track-final-ui">
+#detail-panel.has-selection .detail-actions{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 88px!important;
-  gap:8px!important;
-  margin:0 0 12px!important;
 }
-.detail-action{
+#detail-panel.has-selection #track-satellite-btn{
   display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:7px!important;
-  min-height:40px!important;
-  padding:8px 10px!important;
-  border:1px solid #2b4861!important;
-  border-radius:10px!important;
-  background:#0d1b29!important;
-  color:#d9e5ee!important;
-  font-size:.68rem!important;
-  font-weight:700!important;
 }
-.detail-action.primary-action{
-  background:linear-gradient(180deg,#2788ed,#1e6fd2)!important;
-  border-color:#4998e9!important;
-  color:#fff!important;
+#track-satellite-btn.tracking{
+  background:#17462f!important;
+  border-color:#50bd7a!important;
+  color:#e6fff0!important;
 }
-.detail-action.tracking{
-  background:#17422e!important;
-  border-color:#49a46e!important;
-  color:#d8ffe4!important;
+#detail-panel:not(.has-selection) .detail-actions{
+  display:grid!important;
 }
-
-/* Debris is a visible brown rock-like point layer, same apparent size as satellites. */
-#webgl-container .debris-rocks{
-  opacity:1!important;
+#detail-panel:not(.has-selection) .detail-actions button{
+  opacity:.45!important;
 }
-
-/* Do not let any old desktop positioning hide the altitude selector. */
 @media(min-width:981px){
-  #header-panel .distance-filter{
-    position:static!important;
-    left:auto!important;right:auto!important;bottom:auto!important;
-    margin-top:15px!important;
-  }
-  #header-panel{
-    overflow:auto!important;
-    padding-bottom:20px!important;
-  }
-}
-
-/* Technical mode: the right rail itself is the scroll surface. */
-@media(min-width:981px){
-  body.technical-mode #right-rail{
-    overflow-y:auto!important;
-    overflow-x:hidden!important;
-  }
-  body.technical-mode #right-rail .card{
-    flex-shrink:0!important;
-  }
-}
-
-/* Mobile/tablet keeps everything in normal flow. */
-@media(max-width:980px){
-  #header-panel .distance-filter{
-    position:static!important;
-  }
-  .detail-actions{
-    grid-template-columns:minmax(0,1fr) minmax(82px,100px)!important;
-  }
-}
-@media(max-width:560px){
-  .detail-actions{
-    grid-template-columns:1fr!important;
-  }
-}
-</style>
-
-
-<style id="final-scroll-surface">
-@media(min-width:981px){
-  body.technical-mode #right-rail{
-    overflow-y:auto!important;
-    overflow-x:hidden!important;
-    scrollbar-width:thin!important;
-    scrollbar-color:#4a647c #07111b!important;
-  }
-  body.technical-mode #right-rail::-webkit-scrollbar{width:8px}
-  body.technical-mode #right-rail::-webkit-scrollbar-track{background:#07111b;border-radius:999px}
-  body.technical-mode #right-rail::-webkit-scrollbar-thumb{background:#38536b;border-radius:999px}
-  body.technical-mode #right-rail .card{flex-shrink:0!important}
+ body.technical-mode #right-rail{
+   overflow-y:auto!important;
+   overflow-x:hidden!important;
+   scrollbar-width:auto!important;
+   scrollbar-color:#3d5870 #07111b!important;
+ }
+ body.technical-mode #right-rail::-webkit-scrollbar{width:9px}
+ body.technical-mode #right-rail::-webkit-scrollbar-track{background:#07111b;border-radius:999px}
+ body.technical-mode #right-rail::-webkit-scrollbar-thumb{background:#3d5870;border-radius:999px}
 }
 </style>
 
@@ -2021,28 +1958,69 @@ function satelliteBandColor(band){
 }
 
 
-function makeDebrisRockGeometry(){
- const g=new THREE.IcosahedronGeometry(.065,0);
- // Irregular silhouette: flatten slightly along one axis.
- g.scale(.9,1.15,.72);
- return g;
+function makeDebrisRockTexture(){
+ const c=document.createElement('canvas');c.width=72;c.height=72;
+ const ctx=c.getContext('2d');
+ ctx.clearRect(0,0,72,72);
+ ctx.translate(36,36);
+ ctx.lineJoin='round';
+ // shadow/outline
+ ctx.beginPath();
+ ctx.moveTo(-20,-11);ctx.lineTo(-8,-25);ctx.lineTo(12,-21);ctx.lineTo(23,-8);
+ ctx.lineTo(19,11);ctx.lineTo(7,23);ctx.lineTo(-13,20);ctx.lineTo(-24,6);ctx.closePath();
+ ctx.fillStyle='#352216';ctx.fill();
+ // main rock
+ ctx.beginPath();
+ ctx.moveTo(-18,-9);ctx.lineTo(-7,-21);ctx.lineTo(10,-18);ctx.lineTo(20,-6);
+ ctx.lineTo(16,9);ctx.lineTo(6,18);ctx.lineTo(-11,16);ctx.lineTo(-19,5);ctx.closePath();
+ ctx.fillStyle='#805333';ctx.fill();
+ // facets
+ ctx.beginPath();
+ ctx.moveTo(-7,-21);ctx.lineTo(10,-18);ctx.lineTo(3,-5);ctx.lineTo(-10,-8);ctx.closePath();
+ ctx.fillStyle='#aa7650';ctx.fill();
+ ctx.beginPath();
+ ctx.moveTo(3,-5);ctx.lineTo(20,-6);ctx.lineTo(16,9);ctx.lineTo(5,7);ctx.closePath();
+ ctx.fillStyle='#6b432a';ctx.fill();
+ ctx.beginPath();
+ ctx.moveTo(-10,-8);ctx.lineTo(3,-5);ctx.lineTo(5,7);ctx.lineTo(-7,13);ctx.closePath();
+ ctx.fillStyle='#94603c';ctx.fill();
+ // small highlight
+ ctx.beginPath();
+ ctx.arc(-6,-10,3,0,Math.PI*2);ctx.fillStyle='rgba(225,178,132,.55)';ctx.fill();
+ const tex=new THREE.CanvasTexture(c);
+ tex.needsUpdate=true;
+ tex.minFilter=THREE.LinearFilter;
+ tex.magFilter=THREE.NearestFilter;
+ tex.generateMipmaps=false;
+ return tex;
+}
+
+function satelliteBandColor(band){
+ if(band==='meo')return new THREE.Color(0xffc928);
+ if(band==='far')return new THREE.Color(0xff4d5f);
+ return new THREE.Color(0x45a9ff);
 }
 
 function rebuildSatellitePointsMesh(){
  disposePointLayers();
 
  const iconTexture=window.__satelliteIconTexture||(window.__satelliteIconTexture=makeSatelliteIconTexture());
+ const rockTexture=window.__debrisRockTexture||(window.__debrisRockTexture=makeDebrisRockTexture());
  const body=[],bodyIndices=[],debris=[],debrisIndices=[];
 
  filteredSatellites.forEach((sat,i)=>{
   if(!sat.positionVector||!Number.isFinite(sat.positionVector.x))return;
-  const isDebris=sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT')||String(sat.group||'').endsWith('-debris');
+  const isDebris=sat.objectType.includes('DEBRIS')||
+                 sat.objectType.includes('FRAGMENT')||
+                 String(sat.group||'').endsWith('-debris');
   if(isDebris){debris.push(sat);debrisIndices.push(i)}
   else{body.push(sat);bodyIndices.push(i)}
  });
 
+ // Normal satellite markers.
  if(body.length){
-  const positions=new Float32Array(body.length*3),colors=new Float32Array(body.length*3);
+  const positions=new Float32Array(body.length*3);
+  const colors=new Float32Array(body.length*3);
   body.forEach((sat,i)=>{
     positions[i*3]=sat.positionVector.x;
     positions[i*3+1]=sat.positionVector.y;
@@ -2055,54 +2033,54 @@ function rebuildSatellitePointsMesh(){
   geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
   const mat=new THREE.PointsMaterial({
     map:iconTexture,color:0xffffff,size:10,sizeAttenuation:false,
-    transparent:true,opacity:1,alphaTest:.06,depthWrite:true,depthTest:true,
-    vertexColors:true,blending:THREE.NormalBlending
+    transparent:true,opacity:1,alphaTest:.06,
+    depthWrite:false,depthTest:true,vertexColors:true,
+    blending:THREE.NormalBlending
   });
   satellitePoints=new THREE.Points(geo,mat);
   satellitePoints.name='Satellite Icons';
-  satellitePoints.frustumCulled=true;
+  satellitePoints.frustumCulled=false;
   satellitePoints.userData.satIndices=bodyIndices;
   satellitePoints.renderOrder=20;
   scene.add(satellitePoints);
   spacecraftLayers=[satellitePoints];
  }
 
+ // Debris markers: fixed-size rock sprites, same visual footprint as satellites.
  if(debris.length){
-  const rockGeo=makeDebrisRockGeometry();
-  const rockMat=new THREE.MeshStandardMaterial({
-    color:0x8a5838,
-    roughness:.95,
-    metalness:.02,
-    emissive:0x1a0e07,
-    emissiveIntensity:.22,
-    flatShading:true
+  const positions=new Float32Array(debris.length*3);
+  debris.forEach((sat,i)=>{
+    positions[i*3]=sat.positionVector.x;
+    positions[i*3+1]=sat.positionVector.y;
+    positions[i*3+2]=sat.positionVector.z;
   });
-  const rocks=new THREE.InstancedMesh(rockGeo,rockMat,debris.length);
-  rocks.name='Debris Rocks';
-  rocks.frustumCulled=false;
-  rocks.renderOrder=21;
-  rocks.userData.satIndices=debrisIndices;
-  rocks.userData.isDebrisRockLayer=true;
 
-  const dummy=new THREE.Object3D();
-  const rockColor=new THREE.Color(0x8a5838);
-  for(let i=0;i<debris.length;i++){
-    const sat=debris[i];
-    dummy.position.copy(sat.positionVector);
-    const wobble=(i%7)*.035;
-    dummy.rotation.set(wobble,((i*13)%360)*Math.PI/180,wobble*.6);
-    dummy.scale.setScalar(1.45);
-    dummy.updateMatrix();
-    rocks.setMatrixAt(i,dummy.matrix);
-    rocks.setColorAt(i,rockColor);
-  }
-  rocks.instanceMatrix.needsUpdate=true;
-  if(rocks.instanceColor)rocks.instanceColor.needsUpdate=true;
-  scene.add(rocks);
-  debrisPoints=rocks;
-  debrisGeometry=rockGeo;
-  debrisMaterial=rockMat;
-  debrisLayer=rocks;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+
+  const mat=new THREE.PointsMaterial({
+    map:rockTexture,
+    color:0xffffff,
+    size:10,
+    sizeAttenuation:false,
+    transparent:true,
+    opacity:1,
+    alphaTest:.05,
+    depthWrite:false,
+    depthTest:true,
+    blending:THREE.NormalBlending
+  });
+
+  debrisPoints=new THREE.Points(geo,mat);
+  debrisPoints.name='Debris Rock Markers';
+  debrisPoints.frustumCulled=false;
+  debrisPoints.userData.satIndices=debrisIndices;
+  debrisPoints.userData.isDebrisRockLayer=true;
+  debrisPoints.renderOrder=22;
+  scene.add(debrisPoints);
+  debrisLayer=debrisPoints;
+  debrisGeometry=geo;
+  debrisMaterial=mat;
  }
 
  updateSatelliteIconGeometry();
@@ -2121,31 +2099,20 @@ function updateSatelliteIconGeometry(){
     const c=satelliteBandColor(sat.orbitBand);
     colors.setXYZ(i,c.r,c.g,c.b);
   }
-  pos.needsUpdate=true;colors.needsUpdate=true;
+  pos.needsUpdate=true;
+  colors.needsUpdate=true;
  }
 
- if(debrisPoints?.isInstancedMesh){
-  const dummy=updateSatelliteIconGeometry._dummy||(updateSatelliteIconGeometry._dummy=new THREE.Object3D());
+ if(debrisPoints){
+  const pos=debrisPoints.geometry.attributes.position;
   const idxs=debrisPoints.userData.satIndices||[];
   for(let i=0;i<idxs.length;i++){
     const sat=filteredSatellites[idxs[i]];
     if(!sat?.positionVector)continue;
-    dummy.position.copy(sat.positionVector);
-    const wobble=(i%7)*.035;
-    dummy.rotation.set(wobble,((i*13)%360)*Math.PI/180,wobble*.6);
-    dummy.scale.setScalar(1.45);
-    dummy.updateMatrix();
-    debrisPoints.setMatrixAt(i,dummy.matrix);
+    pos.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z);
   }
-  debrisPoints.instanceMatrix.needsUpdate=true;
- }
+  pos.needsUpdate=true;
 }
-function updateSatelliteIconGeometry(){
- if(!satellitePoints)return;
- const pos=satellitePoints.geometry.attributes.position,colors=satellitePoints.geometry.attributes.color,idxs=satellitePoints.userData.satIndices||[];
- for(let i=0;i<idxs.length;i++){const sat=filteredSatellites[idxs[i]];if(!sat?.positionVector)continue;pos.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z);const c=satelliteBandColor(sat.orbitBand);colors.setXYZ(i,c.r,c.g,c.b)}
- pos.needsUpdate=true;colors.needsUpdate=true;
- if(debrisPoints){const p=debrisPoints.geometry.attributes.position,idx=debrisPoints.userData.satIndices||[];for(let i=0;i<idx.length;i++){const sat=filteredSatellites[idx[i]];if(!sat?.positionVector)continue;p.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z)}p.needsUpdate=true}
 }
 function syncPointGeometryPositions(){
  updateSatelliteIconGeometry();
@@ -2348,155 +2315,7 @@ function onWindowResize(){const container=document.getElementById('webgl-contain
 function animate(){requestAnimationFrame(animate);if(earthClouds)earthClouds.rotation.y+=0.000035;if(selectionMarker?.visible){const pulse=1+Math.sin(Date.now()*.004)*.08;selectionHalo.scale.setScalar(pulse);selectionRing.rotation.z+=.015;updateSelectionVisual()}const now=Date.now(),delta=now-lastFrameTimestamp;lastFrameTimestamp=now;if(!isPaused&&timeMultiplier!==1){simulationOffsetMs+=delta*(timeMultiplier-1);const sec=Math.max(-86400,Math.min(86400,Math.round(simulationOffsetMs/1000)));simulationOffsetMs=sec*1000;document.getElementById('time-slider').value=sec;document.getElementById('time-display').innerText=`${sec}s`;updateTargetUtc()}if(!isPaused)updatePositions();controls.update();renderer.render(scene,camera)}
 
 
-/* ================= FINAL PRODUCT UX — TRACKING ================= */
-let isSatelliteTracking=false;
-let trackingLastAt=0;
-let trackingTarget=new THREE.Vector3();
-let trackingCameraDistance=15;
-
-function setTrackingButtonState(){
-  const btn=document.getElementById('track-satellite-btn');
-  if(!btn)return;
-  btn.disabled=!selectedSatellite;
-  btn.classList.toggle('tracking',!!selectedSatellite&&isSatelliteTracking);
-  btn.innerHTML=isSatelliteTracking
-    ? '<i class="fas fa-crosshairs"></i><span>Tracking target</span>'
-    : '<i class="fas fa-crosshairs"></i><span>Track satellite</span>';
-}
-
-function stopSatelliteTracking(silent=false){
-  isSatelliteTracking=false;
-  setTrackingButtonState();
-  if(!silent)announce('Satellite tracking view released.');
-}
-
-function startSatelliteTracking(){
-  if(!selectedSatellite||!selectedSatellite.positionVector)return;
-  isSatelliteTracking=true;
-  trackingLastAt=0;
-  trackingTarget.copy(selectedSatellite.positionVector);
-  const distance=Math.max(7.8,selectedSatellite.positionVector.length()+2.2);
-  trackingCameraDistance=Math.min(distance,22);
-  setTrackingButtonState();
-  announce(`Tracking ${selectedSatellite.name}.`);
-}
-
-function updateTrackingCamera(){
-  if(!isSatelliteTracking||!selectedSatellite||!selectedSatellite.positionVector||!camera||!controls)return;
-  const now=performance.now();
-  if(now-trackingLastAt<80)return;
-  trackingLastAt=now;
-
-  trackingTarget.lerp(selectedSatellite.positionVector,.22);
-  const target=trackingTarget;
-  const direction=new THREE.Vector3().subVectors(camera.position,controls.target);
-  if(direction.lengthSq()<0.001)direction.set(0,0,1);
-  direction.normalize();
-
-  const desiredPosition=target.clone().add(direction.multiplyScalar(trackingCameraDistance));
-  camera.position.lerp(desiredPosition,.14);
-  controls.target.lerp(target,.18);
-}
-
-function updateSelectedTelemetryFromModel(sat){
-  if(!sat)return;
-  const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
-  set('telemetry-alt',sat.lastAltitudeKm==null?'--':`${sat.lastAltitudeKm.toFixed(0)} km`);
-  set('telemetry-speed',sat.lastVelocityKms==null?'--':`${sat.lastVelocityKms.toFixed(2)} km/s`);
-  set('telemetry-lat',sat.lastLatitudeDeg==null?'--':`${sat.lastLatitudeDeg.toFixed(2)}°`);
-  set('telemetry-lng',sat.lastLongitudeDeg==null?'--':`${sat.lastLongitudeDeg.toFixed(2)}°`);
-}
-
-async function shareSelectedSatellite(){
-  if(!selectedSatellite)return;
-  const url=new URL(location.href);
-  url.searchParams.set('sat',selectedSatellite.noradId);
-  url.searchParams.set('mode',document.body.classList.contains('technical-mode')?'technical':'explorer');
-
-  const link=url.toString();
-  try{
-    await navigator.clipboard.writeText(link);
-    announce('Shareable satellite link copied.');
-    const btn=document.getElementById('share-satellite-btn');
-    if(btn){
-      const original=btn.innerHTML;
-      btn.innerHTML='<i class="fas fa-check"></i><span>Copied</span>';
-      setTimeout(()=>{btn.innerHTML=original},1400);
-    }
-  }catch(e){
-    prompt('Copy this satellite link:',link);
-  }
-}
-
-function applyShareTarget(){
-  const satId=new URLSearchParams(location.search).get('sat');
-  if(!satId||!activeSatellites.length)return;
-  const sat=activeSatellites.find(s=>s.noradId===satId);
-  if(sat)selectSatelliteByNorad(sat.noradId);
-}
-
-/* Rebind selection panel controls without touching the backend. */
-document.addEventListener('click',e=>{
-  if(e.target.closest('#track-satellite-btn')){
-    if(isSatelliteTracking)stopSatelliteTracking();
-    else startSatelliteTracking();
-  }
-  if(e.target.closest('#share-satellite-btn'))shareSelectedSatellite();
-});
-
-/* Keep the action controls in sync with selection. */
-const _originalSelectSatelliteByNorad=selectSatelliteByNorad;
-selectSatelliteByNorad=function(id){
-  const result=_originalSelectSatelliteByNorad(id);
-  isSatelliteTracking=false;
-  setTrackingButtonState();
-  const share=document.getElementById('share-satellite-btn');
-  if(share)share.disabled=!selectedSatellite;
-  const track=document.getElementById('track-satellite-btn');
-  if(track)track.disabled=!selectedSatellite;
-  return result;
-};
-
-const _originalClearSelection=clearSelection;
-clearSelection=function(){
-  stopSatelliteTracking(true);
-  const result=_originalClearSelection();
-  setTrackingButtonState();
-  const share=document.getElementById('share-satellite-btn');
-  if(share)share.disabled=true;
-  ['telemetry-alt','telemetry-speed','telemetry-lat','telemetry-lng'].forEach(id=>{
-    const e=document.getElementById(id);if(e)e.textContent='--';
-  });
-  return result;
-};
-
-/* Patch only the existing position updater so the selected telemetry stays fresh. */
-const _originalUpdateDetailPanel=updateDetailPanel;
-updateDetailPanel=function(sat,now,gmst){
-  const result=_originalUpdateDetailPanel(sat,now,gmst);
-  updateSelectedTelemetryFromModel(sat);
-  return result;
-};
-
-/* Extend the existing render loop with tracking camera behaviour. */
-const _originalAnimate=animate;
-animate=function(){
-  _originalAnimate();
-};
-
-/* Hook tracking into the existing frame loop safely by adding a lightweight
-   interval; this avoids changing the propagation/render architecture. */
-setInterval(()=>{
-  if(isSatelliteTracking)updateTrackingCamera();
-},80);
-setTimeout(()=>{
-  const share=document.getElementById('share-satellite-btn');
-  const track=document.getElementById('track-satellite-btn');
-  if(share)share.disabled=!selectedSatellite;
-  if(track)track.disabled=!selectedSatellite;
-  applyShareTarget();
-},1800);
-
+/* Final tracking controller is installed in #sattracker-final-behavior. */
 </script>
 <script>
 
@@ -2651,120 +2470,172 @@ document.addEventListener('DOMContentLoaded',()=>{
 (function(){
 'use strict';
 
-let __preTrackCamera=null;
-let __restoreStartedAt=0;
-let __restoreActive=false;
-const __restoreDuration=460;
+let __tracking=false;
+let __savedView=null;
+let __restoreView=null;
+let __restoreStarted=0;
+let __restoreStart=null;
+const __restoreMs=520;
 
-function __captureView(){
-  if(!camera||!controls)return;
-  __preTrackCamera={
-    position:camera.position.clone(),
-    target:controls.target.clone(),
-    fov:camera.fov
-  };
+function setTrackingButton(){
+ const b=document.getElementById('track-satellite-btn');
+ const s=document.getElementById('share-satellite-btn');
+ const has=!!selectedSatellite;
+ if(b){
+  b.disabled=!has;
+  b.classList.toggle('tracking',has&&__tracking);
+  b.innerHTML=__tracking
+   ? '<i class="fas fa-crosshairs"></i><span>Tracking satellite</span>'
+   : '<i class="fas fa-crosshairs"></i><span>Track satellite</span>';
+ }
+ if(s)s.disabled=!has;
 }
 
-function __beginRestore(){
-  if(!__preTrackCamera||!camera||!controls)return;
-  __restoreActive=true;
-  __restoreStartedAt=performance.now();
+function captureView(){
+ if(!camera||!controls)return;
+ __savedView={
+  position:camera.position.clone(),
+  target:controls.target.clone(),
+  fov:camera.fov
+ };
 }
 
-function __finishRestore(){
-  if(!__preTrackCamera||!camera||!controls)return;
-  camera.position.copy(__preTrackCamera.position);
-  controls.target.copy(__preTrackCamera.target);
-  camera.fov=__preTrackCamera.fov;
+function beginRestore(){
+ if(!__savedView||!camera||!controls)return;
+ __restoreView={
+  position:__savedView.position.clone(),
+  target:__savedView.target.clone(),
+  fov:__savedView.fov
+ };
+ __restoreStart={
+  position:camera.position.clone(),
+  target:controls.target.clone(),
+  fov:camera.fov
+ };
+ __restoreStarted=performance.now();
+}
+
+function startTracking(){
+ if(!selectedSatellite||!camera||!controls)return;
+ if(!__tracking)captureView();
+ __restoreView=null;
+ __restoreStart=null;
+ __tracking=true;
+ setTrackingButton();
+ announce(`Tracking ${selectedSatellite.name}.`);
+}
+
+function stopTracking(silent=false){
+ const was=__tracking;
+ __tracking=false;
+ setTrackingButton();
+ if(was)beginRestore();
+ if(!silent)announce('Satellite tracking stopped. Restoring previous view.');
+}
+
+function updateTrackingCamera(){
+ // Restore the exact camera POV that existed before tracking.
+ if(__restoreView&&__restoreStart&&camera&&controls){
+  const t=Math.min(1,(performance.now()-__restoreStarted)/__restoreMs);
+  const e=1-Math.pow(1-t,3);
+  camera.position.lerpVectors(__restoreStart.position,__restoreView.position,e);
+  controls.target.lerpVectors(__restoreStart.target,__restoreView.target,e);
+  camera.fov=THREE.MathUtils.lerp(__restoreStart.fov,__restoreView.fov,e);
   camera.updateProjectionMatrix();
   controls.update();
-  __restoreActive=false;
-  __preTrackCamera=null;
+  if(t>=1){
+   camera.position.copy(__restoreView.position);
+   controls.target.copy(__restoreView.target);
+   camera.fov=__restoreView.fov;
+   camera.updateProjectionMatrix();
+   controls.update();
+   __restoreView=null;
+   __restoreStart=null;
+   __savedView=null;
+  }
+  return;
+ }
+
+ if(!__tracking||!selectedSatellite?.positionVector||!camera||!controls)return;
+
+ const target=selectedSatellite.positionVector;
+ const direction=new THREE.Vector3().subVectors(camera.position,controls.target);
+ if(direction.lengthSq()<0.0001)direction.set(0,0,1);
+ direction.normalize();
+
+ const wantedDistance=THREE.MathUtils.clamp(
+   selectedSatellite.orbitBand==='leo'?9.2:trackingCameraDistance||15,
+   8.2,24
+ );
+ const wanted=target.clone().add(direction.multiplyScalar(wantedDistance));
+ camera.position.lerp(wanted,.18);
+ controls.target.lerp(target,.22);
 }
 
-/* Preserve the existing Track Satellite feature, but make its state deterministic. */
-if(typeof startSatelliteTracking==='function'){
-  const _start=startSatelliteTracking;
-  startSatelliteTracking=function(){
-    if(!isSatelliteTracking)__captureView();
-    __restoreActive=false;
-    _start();
-  };
-}
-
-if(typeof stopSatelliteTracking==='function'){
-  const _stop=stopSatelliteTracking;
-  stopSatelliteTracking=function(silent=false){
-    const was=!!isSatelliteTracking;
-    _stop(silent);
-    if(was)__beginRestore();
-  };
-}
-
-if(typeof updateTrackingCamera==='function'){
-  const _track=updateTrackingCamera;
-  updateTrackingCamera=function(){
-    if(__restoreActive){
-      if(!__preTrackCamera||!camera||!controls){__restoreActive=false;return;}
-      const t=Math.min(1,(performance.now()-__restoreStartedAt)/__restoreDuration);
-      const e=1-Math.pow(1-t,3);
-      const startPos=updateTrackingCamera.__restoreStartPos||(updateTrackingCamera.__restoreStartPos=camera.position.clone());
-      const startTarget=updateTrackingCamera.__restoreStartTarget||(updateTrackingCamera.__restoreStartTarget=controls.target.clone());
-      const startFov=Number.isFinite(updateTrackingCamera.__restoreStartFov)?updateTrackingCamera.__restoreStartFov:(updateTrackingCamera.__restoreStartFov=camera.fov);
-
-      camera.position.lerpVectors(startPos,__preTrackCamera.position,e);
-      controls.target.lerpVectors(startTarget,__preTrackCamera.target,e);
-      camera.fov=THREE.MathUtils.lerp(startFov,__preTrackCamera.fov,e);
-      camera.updateProjectionMatrix();
-      controls.update();
-
-      if(t>=1){
-        __finishRestore();
-        updateTrackingCamera.__restoreStartPos=null;
-        updateTrackingCamera.__restoreStartTarget=null;
-        updateTrackingCamera.__restoreStartFov=null;
-      }
-      return;
-    }
-    _track();
-  };
-}
-
-/* Selecting another satellite should never leave the camera locked to the old target. */
-if(typeof selectSatelliteByNorad==='function'){
-  const _select=selectSatelliteByNorad;
-  selectSatelliteByNorad=function(id){
-    if(isSatelliteTracking)stopSatelliteTracking(true);
-    return _select(id);
-  };
-}
-
-/* Close control also releases tracking. */
-document.getElementById('close-detail')?.addEventListener('click',()=>{
-  if(isSatelliteTracking)stopSatelliteTracking(true);
+/* One click handler for the Track/Share actions. */
+document.addEventListener('click',e=>{
+ const track=e.target.closest('#track-satellite-btn');
+ const share=e.target.closest('#share-satellite-btn');
+ if(track){
+  e.preventDefault();
+  if(__tracking)stopTracking();
+  else startTracking();
+  return;
+ }
+ if(share&&typeof shareSelectedSatellite==='function'){
+  e.preventDefault();
+  shareSelectedSatellite();
+ }
 });
 
-/* Keep debris independently updated even when no normal satellite layer exists. */
-if(typeof updatePositions==='function'){
-  const _updatePositions=updatePositions;
-  updatePositions=function(){
-    const result=_updatePositions();
-    if(debrisPoints?.isInstancedMesh){
-      updateSatelliteIconGeometry();
-    }
-    return result;
-  };
+/* If a different satellite is selected, leave tracking mode first. */
+const __selectBase=selectSatelliteByNorad;
+selectSatelliteByNorad=function(id){
+ if(__tracking)stopTracking(true);
+ const result=__selectBase(id);
+ __restoreView=null;
+ __restoreStart=null;
+ setTrackingButton();
+ return result;
+};
+
+/* Clear selection should also unlock the camera. */
+const __clearBase=clearSelection;
+clearSelection=function(){
+ if(__tracking)stopTracking(true);
+ const result=__clearBase();
+ setTrackingButton();
+ return result;
+};
+
+/* Replace the old close behavior with a safe close that also releases tracking. */
+const __close=document.getElementById('close-detail');
+if(__close){
+ __close.addEventListener('click',()=>{
+  if(__tracking)stopTracking(true);
+  setTimeout(setTrackingButton,0);
+ },true);
 }
 
-/* Ensure controls are never hidden/disabled by empty-state logic. */
-function syncTrackControls(){
-  const has=!!selectedSatellite;
-  const track=document.getElementById('track-satellite-btn');
-  const share=document.getElementById('share-satellite-btn');
-  if(track)track.disabled=!has;
-  if(share)share.disabled=!has;
+setInterval(updateTrackingCamera,50);
+setInterval(setTrackingButton,350);
+
+/* Initialize controls after the existing app bootstraps. */
+setTimeout(()=>{
+ setTrackingButton();
+ if(typeof applyShareTarget==='function')applyShareTarget();
+},1400);
+
+/* Make Technical mode's right rail a real, visible scroll surface. */
+function refreshTechnicalScroll(){
+ const rail=document.getElementById('right-rail');
+ if(rail){
+  rail.style.overflowY=document.body.classList.contains('technical-mode')?'scroll':'';
+  rail.style.overflowX='hidden';
+ }
 }
-setInterval(syncTrackControls,500);
+setTimeout(refreshTechnicalScroll,1000);
+document.getElementById('ui-mode')?.addEventListener('change',()=>setTimeout(refreshTechnicalScroll,50));
 
 })();
 </script>
