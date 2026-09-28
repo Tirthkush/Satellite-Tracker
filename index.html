@@ -1058,6 +1058,101 @@ html,body{font-size:16px!important;background:#050a10!important}
 }
 </style>
 
+
+<style id="final-corrective-ui">
+/* Final corrective layer: never hides core satellite controls. */
+.detail-actions{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 88px!important;
+  gap:8px!important;
+  margin:0 0 12px!important;
+}
+.detail-action{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  min-height:40px!important;
+  padding:8px 10px!important;
+  border:1px solid #2b4861!important;
+  border-radius:10px!important;
+  background:#0d1b29!important;
+  color:#d9e5ee!important;
+  font-size:.68rem!important;
+  font-weight:700!important;
+}
+.detail-action.primary-action{
+  background:linear-gradient(180deg,#2788ed,#1e6fd2)!important;
+  border-color:#4998e9!important;
+  color:#fff!important;
+}
+.detail-action.tracking{
+  background:#17422e!important;
+  border-color:#49a46e!important;
+  color:#d8ffe4!important;
+}
+
+/* Debris is a visible brown rock-like point layer, same apparent size as satellites. */
+#webgl-container .debris-rocks{
+  opacity:1!important;
+}
+
+/* Do not let any old desktop positioning hide the altitude selector. */
+@media(min-width:981px){
+  #header-panel .distance-filter{
+    position:static!important;
+    left:auto!important;right:auto!important;bottom:auto!important;
+    margin-top:15px!important;
+  }
+  #header-panel{
+    overflow:auto!important;
+    padding-bottom:20px!important;
+  }
+}
+
+/* Technical mode: the right rail itself is the scroll surface. */
+@media(min-width:981px){
+  body.technical-mode #right-rail{
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+  body.technical-mode #right-rail .card{
+    flex-shrink:0!important;
+  }
+}
+
+/* Mobile/tablet keeps everything in normal flow. */
+@media(max-width:980px){
+  #header-panel .distance-filter{
+    position:static!important;
+  }
+  .detail-actions{
+    grid-template-columns:minmax(0,1fr) minmax(82px,100px)!important;
+  }
+}
+@media(max-width:560px){
+  .detail-actions{
+    grid-template-columns:1fr!important;
+  }
+}
+</style>
+
+
+<style id="final-scroll-surface">
+@media(min-width:981px){
+  body.technical-mode #right-rail{
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    scrollbar-width:thin!important;
+    scrollbar-color:#4a647c #07111b!important;
+  }
+  body.technical-mode #right-rail::-webkit-scrollbar{width:8px}
+  body.technical-mode #right-rail::-webkit-scrollbar-track{background:#07111b;border-radius:999px}
+  body.technical-mode #right-rail::-webkit-scrollbar-thumb{background:#38536b;border-radius:999px}
+  body.technical-mode #right-rail .card{flex-shrink:0!important}
+}
+</style>
+
 </head>
 <body>
 <div id="app">
@@ -1926,81 +2021,124 @@ function satelliteBandColor(band){
 }
 
 
-function makeDebrisRockTexture(){
- const c=document.createElement('canvas');
- c.width=64;c.height=64;
- const ctx=c.getContext('2d');
- ctx.clearRect(0,0,64,64);
- ctx.save();
- ctx.translate(32,32);
- ctx.beginPath();
- const pts=[[0,-18],[9,-14],[17,-9],[16,2],[11,12],[2,18],[-10,15],[-18,7],[-17,-5],[-10,-14]];
- pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
- ctx.closePath();
- const g=ctx.createRadialGradient(-6,-7,2,2,3,22);
- g.addColorStop(0,'rgba(212,173,132,.98)');
- g.addColorStop(.34,'rgba(152,109,74,.98)');
- g.addColorStop(.78,'rgba(103,72,47,.98)');
- g.addColorStop(1,'rgba(61,43,31,.98)');
- ctx.fillStyle=g;ctx.fill();
- ctx.globalAlpha=.5;
- ctx.fillStyle='#4c3728';
- [[-8,-5,3],[5,-9,2.4],[7,6,3],[-5,8,2.2]].forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()});
- ctx.globalAlpha=1;
- ctx.strokeStyle='rgba(236,205,170,.45)';ctx.lineWidth=1.2;ctx.stroke();
- ctx.restore();
- const tex=new THREE.CanvasTexture(c);
- tex.needsUpdate=true;
- tex.minFilter=THREE.LinearFilter;
- tex.magFilter=THREE.LinearFilter;
- tex.generateMipmaps=false;
- return tex;
+function makeDebrisRockGeometry(){
+ const g=new THREE.IcosahedronGeometry(.065,0);
+ // Irregular silhouette: flatten slightly along one axis.
+ g.scale(.9,1.15,.72);
+ return g;
 }
 
 function rebuildSatellitePointsMesh(){
  disposePointLayers();
+
  const iconTexture=window.__satelliteIconTexture||(window.__satelliteIconTexture=makeSatelliteIconTexture());
  const body=[],bodyIndices=[],debris=[],debrisIndices=[];
+
  filteredSatellites.forEach((sat,i)=>{
   if(!sat.positionVector||!Number.isFinite(sat.positionVector.x))return;
-  const isDebris=sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT');
+  const isDebris=sat.objectType.includes('DEBRIS')||sat.objectType.includes('FRAGMENT')||String(sat.group||'').endsWith('-debris');
   if(isDebris){debris.push(sat);debrisIndices.push(i)}
-  else {body.push(sat);bodyIndices.push(i)}
+  else{body.push(sat);bodyIndices.push(i)}
  });
+
  if(body.length){
   const positions=new Float32Array(body.length*3),colors=new Float32Array(body.length*3);
-  body.forEach((sat,i)=>{positions[i*3]=sat.positionVector.x;positions[i*3+1]=sat.positionVector.y;positions[i*3+2]=sat.positionVector.z;const c=satelliteBandColor(sat.orbitBand);colors[i*3]=c.r;colors[i*3+1]=c.g;colors[i*3+2]=c.b});
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
-  const mat=new THREE.PointsMaterial({map:iconTexture,color:0xffffff,size:10,sizeAttenuation:false,transparent:true,opacity:.98,alphaTest:.08,depthWrite:true,depthTest:true,vertexColors:true,blending:THREE.NormalBlending});
-  satellitePoints=new THREE.Points(geo,mat);satellitePoints.name='Satellite Icons';satellitePoints.frustumCulled=true;satellitePoints.userData.satIndices=bodyIndices;satellitePoints.renderOrder=20;scene.add(satellitePoints);spacecraftLayers=[satellitePoints];
- }
- if(debris.length){
-  const positions=new Float32Array(debris.length*3),colors=new Float32Array(debris.length*3);
-  debris.forEach((sat,i)=>{positions[i*3]=sat.positionVector.x;positions[i*3+1]=sat.positionVector.y;positions[i*3+2]=sat.positionVector.z;colors[i*3]=.7;colors[i*3+1]=.7;colors[i*3+2]=.74});
-  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
-  const debrisTexture=window.__debrisRockTexture||(window.__debrisRockTexture=makeDebrisRockTexture());
-  const mat=new THREE.PointsMaterial({
-    map:debrisTexture,
-    color:0x8a6543,
-    size:10,
-    sizeAttenuation:false,
-    transparent:true,
-    opacity:.98,
-    alphaTest:.10,
-    depthWrite:false,
-    depthTest:true,
-    vertexColors:false,
-    blending:THREE.NormalBlending
+  body.forEach((sat,i)=>{
+    positions[i*3]=sat.positionVector.x;
+    positions[i*3+1]=sat.positionVector.y;
+    positions[i*3+2]=sat.positionVector.z;
+    const c=satelliteBandColor(sat.orbitBand);
+    colors[i*3]=c.r;colors[i*3+1]=c.g;colors[i*3+2]=c.b;
   });
-  debrisPoints=new THREE.Points(geo,mat);
-  debrisPoints.name='Debris Markers';
-  debrisPoints.frustumCulled=false;
-  debrisPoints.userData.satIndices=debrisIndices;
-  debrisPoints.renderOrder=21;
-  scene.add(debrisPoints);
-  debrisLayer=debrisPoints;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat=new THREE.PointsMaterial({
+    map:iconTexture,color:0xffffff,size:10,sizeAttenuation:false,
+    transparent:true,opacity:1,alphaTest:.06,depthWrite:true,depthTest:true,
+    vertexColors:true,blending:THREE.NormalBlending
+  });
+  satellitePoints=new THREE.Points(geo,mat);
+  satellitePoints.name='Satellite Icons';
+  satellitePoints.frustumCulled=true;
+  satellitePoints.userData.satIndices=bodyIndices;
+  satellitePoints.renderOrder=20;
+  scene.add(satellitePoints);
+  spacecraftLayers=[satellitePoints];
  }
- updateSatelliteIconGeometry();updateSelectedModel();
+
+ if(debris.length){
+  const rockGeo=makeDebrisRockGeometry();
+  const rockMat=new THREE.MeshStandardMaterial({
+    color:0x8a5838,
+    roughness:.95,
+    metalness:.02,
+    emissive:0x1a0e07,
+    emissiveIntensity:.22,
+    flatShading:true
+  });
+  const rocks=new THREE.InstancedMesh(rockGeo,rockMat,debris.length);
+  rocks.name='Debris Rocks';
+  rocks.frustumCulled=false;
+  rocks.renderOrder=21;
+  rocks.userData.satIndices=debrisIndices;
+  rocks.userData.isDebrisRockLayer=true;
+
+  const dummy=new THREE.Object3D();
+  const rockColor=new THREE.Color(0x8a5838);
+  for(let i=0;i<debris.length;i++){
+    const sat=debris[i];
+    dummy.position.copy(sat.positionVector);
+    const wobble=(i%7)*.035;
+    dummy.rotation.set(wobble,((i*13)%360)*Math.PI/180,wobble*.6);
+    dummy.scale.setScalar(1.45);
+    dummy.updateMatrix();
+    rocks.setMatrixAt(i,dummy.matrix);
+    rocks.setColorAt(i,rockColor);
+  }
+  rocks.instanceMatrix.needsUpdate=true;
+  if(rocks.instanceColor)rocks.instanceColor.needsUpdate=true;
+  scene.add(rocks);
+  debrisPoints=rocks;
+  debrisGeometry=rockGeo;
+  debrisMaterial=rockMat;
+  debrisLayer=rocks;
+ }
+
+ updateSatelliteIconGeometry();
+ updateSelectedModel();
+}
+
+function updateSatelliteIconGeometry(){
+ if(satellitePoints){
+  const pos=satellitePoints.geometry.attributes.position;
+  const colors=satellitePoints.geometry.attributes.color;
+  const idxs=satellitePoints.userData.satIndices||[];
+  for(let i=0;i<idxs.length;i++){
+    const sat=filteredSatellites[idxs[i]];
+    if(!sat?.positionVector)continue;
+    pos.setXYZ(i,sat.positionVector.x,sat.positionVector.y,sat.positionVector.z);
+    const c=satelliteBandColor(sat.orbitBand);
+    colors.setXYZ(i,c.r,c.g,c.b);
+  }
+  pos.needsUpdate=true;colors.needsUpdate=true;
+ }
+
+ if(debrisPoints?.isInstancedMesh){
+  const dummy=updateSatelliteIconGeometry._dummy||(updateSatelliteIconGeometry._dummy=new THREE.Object3D());
+  const idxs=debrisPoints.userData.satIndices||[];
+  for(let i=0;i<idxs.length;i++){
+    const sat=filteredSatellites[idxs[i]];
+    if(!sat?.positionVector)continue;
+    dummy.position.copy(sat.positionVector);
+    const wobble=(i%7)*.035;
+    dummy.rotation.set(wobble,((i*13)%360)*Math.PI/180,wobble*.6);
+    dummy.scale.setScalar(1.45);
+    dummy.updateMatrix();
+    debrisPoints.setMatrixAt(i,dummy.matrix);
+  }
+  debrisPoints.instanceMatrix.needsUpdate=true;
+ }
 }
 function updateSatelliteIconGeometry(){
  if(!satellitePoints)return;
@@ -2508,226 +2646,128 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 
+
 <script id="sattracker-final-behavior">
 (function(){
 'use strict';
 
-/* ================================================================
-   FINAL BEHAVIOR FIX
-   A) Debris is rock-like and the same screen size as satellite markers.
-   B) Technical rail scrolls naturally.
-   C) Tracking stores the exact pre-track camera/target and restores it
-      cleanly on toggle-off / selection change / close.
-   D) Orbit-path groups are disposed safely.
-   ================================================================ */
+let __preTrackCamera=null;
+let __restoreStartedAt=0;
+let __restoreActive=false;
+const __restoreDuration=460;
 
-function enforceDebrisMarkerStyle(){
-  if(!debrisPoints?.material)return;
-  debrisPoints.material.map=window.__debrisRockTexture||(window.__debrisRockTexture=makeDebrisRockTexture());
-  debrisPoints.material.color.set(0x8a6543);
-  debrisPoints.material.size=10;                 // same as satellite marker size
-  debrisPoints.material.sizeAttenuation=false;
-  debrisPoints.material.opacity=.98;
-  debrisPoints.material.transparent=true;
-  debrisPoints.material.alphaTest=.10;
-  debrisPoints.material.vertexColors=false;
-  debrisPoints.material.depthWrite=false;
-  debrisPoints.material.depthTest=true;
-  debrisPoints.material.needsUpdate=true;
-  debrisPoints.renderOrder=21;
-}
-if(typeof rebuildSatellitePointsMesh==='function'){
-  const rebuildBase=rebuildSatellitePointsMesh;
-  rebuildSatellitePointsMesh=function(){
-    rebuildBase();
-    enforceDebrisMarkerStyle();
-  };
-}
-if(typeof updateSatelliteIconGeometry==='function'){
-  const syncBase=updateSatelliteIconGeometry;
-  updateSatelliteIconGeometry=function(){
-    syncBase();
-    enforceDebrisMarkerStyle();
-  };
-}
-
-/* ---------- Safe orbit-path cleanup ---------- */
-function disposeOrbitPathSafely(){
-  if(!orbitPathLine)return;
-  scene.remove(orbitPathLine);
-  orbitPathLine.traverse(obj=>{
-    if(obj.geometry)obj.geometry.dispose();
-    if(obj.material){
-      if(Array.isArray(obj.material))obj.material.forEach(m=>m?.dispose?.());
-      else obj.material.dispose?.();
-    }
-  });
-  orbitPathLine=null;
-}
-
-/* Replace the buggy clearSelection cleanup without touching any backend/data code. */
-if(typeof clearSelection==='function'){
-  const clearBase=clearSelection;
-  clearSelection=function(){
-    stopSatelliteTracking(true);
-    disposeOrbitPathSafely();
-    const result=clearBase();
-    /* clearBase may have attempted the old cleanup; make the state safe again. */
-    disposeOrbitPathSafely();
-    return result;
-  };
-}
-
-/* ---------- Deterministic camera tracking / restore ---------- */
-let trackingViewSnapshot=null;
-let trackingRestore=null;
-let trackingRestoreRaf=0;
-
-function cloneView(){
-  if(!camera||!controls)return null;
-  return {
+function __captureView(){
+  if(!camera||!controls)return;
+  __preTrackCamera={
     position:camera.position.clone(),
     target:controls.target.clone(),
     fov:camera.fov
   };
 }
 
-function cancelRestore(){
-  trackingRestore=null;
-  if(trackingRestoreRaf){cancelAnimationFrame(trackingRestoreRaf);trackingRestoreRaf=0;}
+function __beginRestore(){
+  if(!__preTrackCamera||!camera||!controls)return;
+  __restoreActive=true;
+  __restoreStartedAt=performance.now();
 }
 
-function captureTrackingView(){
-  if(!isSatelliteTracking){
-    trackingViewSnapshot=cloneView();
-  }
-}
-
-function animateRestore(){
-  if(!trackingRestore||!camera||!controls)return;
-  const elapsed=performance.now()-trackingRestore.started;
-  const t=Math.min(1,elapsed/trackingRestore.duration);
-  const eased=1-Math.pow(1-t,3);
-
-  camera.position.lerpVectors(trackingRestore.from.position,trackingRestore.to.position,eased);
-  controls.target.lerpVectors(trackingRestore.from.target,trackingRestore.to.target,eased);
-  camera.fov=THREE.MathUtils.lerp(trackingRestore.from.fov,trackingRestore.to.fov,eased);
+function __finishRestore(){
+  if(!__preTrackCamera||!camera||!controls)return;
+  camera.position.copy(__preTrackCamera.position);
+  controls.target.copy(__preTrackCamera.target);
+  camera.fov=__preTrackCamera.fov;
   camera.updateProjectionMatrix();
   controls.update();
-
-  if(t<1){
-    trackingRestoreRaf=requestAnimationFrame(animateRestore);
-  }else{
-    camera.position.copy(trackingRestore.to.position);
-    controls.target.copy(trackingRestore.to.target);
-    camera.fov=trackingRestore.to.fov;
-    camera.updateProjectionMatrix();
-    controls.update();
-    trackingRestore=null;
-    trackingRestoreRaf=0;
-  }
+  __restoreActive=false;
+  __preTrackCamera=null;
 }
 
-function restoreTrackingView(){
-  if(!trackingViewSnapshot||!camera||!controls){
-    cancelRestore();
-    return;
-  }
-  cancelRestore();
-  trackingRestore={
-    from:cloneView(),
-    to:{
-      position:trackingViewSnapshot.position.clone(),
-      target:trackingViewSnapshot.target.clone(),
-      fov:trackingViewSnapshot.fov
-    },
-    started:performance.now(),
-    duration:460
+/* Preserve the existing Track Satellite feature, but make its state deterministic. */
+if(typeof startSatelliteTracking==='function'){
+  const _start=startSatelliteTracking;
+  startSatelliteTracking=function(){
+    if(!isSatelliteTracking)__captureView();
+    __restoreActive=false;
+    _start();
   };
-  animateRestore();
-  trackingViewSnapshot=null;
 }
 
-function hardStopTracking(silent=false){
-  const wasTracking=!!isSatelliteTracking;
-  isSatelliteTracking=false;
-  cancelRestore();
-  setTrackingButtonState();
-  if(wasTracking)restoreTrackingView();
-  if(!silent)announce('Satellite tracking view released.');
+if(typeof stopSatelliteTracking==='function'){
+  const _stop=stopSatelliteTracking;
+  stopSatelliteTracking=function(silent=false){
+    const was=!!isSatelliteTracking;
+    _stop(silent);
+    if(was)__beginRestore();
+  };
 }
 
-function hardStartTracking(){
-  if(!selectedSatellite||!selectedSatellite.positionVector)return;
-  if(!isSatelliteTracking)captureTrackingView();
-  cancelRestore();
-  isSatelliteTracking=true;
-  trackingLastAt=0;
-  trackingTarget.copy(selectedSatellite.positionVector);
-  const distance=Math.max(7.8,selectedSatellite.positionVector.length()+2.2);
-  trackingCameraDistance=Math.min(distance,22);
-  setTrackingButtonState();
-  announce(`Tracking ${selectedSatellite.name}.`);
+if(typeof updateTrackingCamera==='function'){
+  const _track=updateTrackingCamera;
+  updateTrackingCamera=function(){
+    if(__restoreActive){
+      if(!__preTrackCamera||!camera||!controls){__restoreActive=false;return;}
+      const t=Math.min(1,(performance.now()-__restoreStartedAt)/__restoreDuration);
+      const e=1-Math.pow(1-t,3);
+      const startPos=updateTrackingCamera.__restoreStartPos||(updateTrackingCamera.__restoreStartPos=camera.position.clone());
+      const startTarget=updateTrackingCamera.__restoreStartTarget||(updateTrackingCamera.__restoreStartTarget=controls.target.clone());
+      const startFov=Number.isFinite(updateTrackingCamera.__restoreStartFov)?updateTrackingCamera.__restoreStartFov:(updateTrackingCamera.__restoreStartFov=camera.fov);
+
+      camera.position.lerpVectors(startPos,__preTrackCamera.position,e);
+      controls.target.lerpVectors(startTarget,__preTrackCamera.target,e);
+      camera.fov=THREE.MathUtils.lerp(startFov,__preTrackCamera.fov,e);
+      camera.updateProjectionMatrix();
+      controls.update();
+
+      if(t>=1){
+        __finishRestore();
+        updateTrackingCamera.__restoreStartPos=null;
+        updateTrackingCamera.__restoreStartTarget=null;
+        updateTrackingCamera.__restoreStartFov=null;
+      }
+      return;
+    }
+    _track();
+  };
 }
 
-function safeUpdateTrackingCamera(){
-  if(trackingRestore){
-    animateRestore();
-    return;
-  }
-  if(!isSatelliteTracking||!selectedSatellite||!selectedSatellite.positionVector||!camera||!controls)return;
-  const now=performance.now();
-  if(now-trackingLastAt<80)return;
-  trackingLastAt=now;
-
-  trackingTarget.lerp(selectedSatellite.positionVector,.22);
-  const target=trackingTarget;
-  const direction=new THREE.Vector3().subVectors(camera.position,controls.target);
-  if(direction.lengthSq()<0.001)direction.set(0,0,1);
-  direction.normalize();
-
-  const desiredPosition=target.clone().add(direction.multiplyScalar(trackingCameraDistance));
-  camera.position.lerp(desiredPosition,.14);
-  controls.target.lerp(target,.18);
-}
-
-/* Override the earlier tracking functions so there is exactly one source of truth. */
-window.stopSatelliteTracking=hardStopTracking;
-window.startSatelliteTracking=hardStartTracking;
-window.updateTrackingCamera=safeUpdateTrackingCamera;
-
-/* Global aliases are resolved from the global object in the existing handlers. */
-if(typeof stopSatelliteTracking==='function'){} 
-if(typeof startSatelliteTracking==='function'){}
-if(typeof updateTrackingCamera==='function'){}
-
-/* Selection wrapper: selecting another satellite exits tracking first and restores POV. */
+/* Selecting another satellite should never leave the camera locked to the old target. */
 if(typeof selectSatelliteByNorad==='function'){
-  const selectBase=selectSatelliteByNorad;
-  window.selectSatelliteByNorad=function(id){
-    if(isSatelliteTracking)hardStopTracking(true);
-    return selectBase(id);
+  const _select=selectSatelliteByNorad;
+  selectSatelliteByNorad=function(id){
+    if(isSatelliteTracking)stopSatelliteTracking(true);
+    return _select(id);
   };
 }
 
-/* Close detail = leave tracking first. */
+/* Close control also releases tracking. */
 document.getElementById('close-detail')?.addEventListener('click',()=>{
-  if(isSatelliteTracking)hardStopTracking(true);
-},{capture:true});
+  if(isSatelliteTracking)stopSatelliteTracking(true);
+});
 
-/* Technical mode rail: always allow vertical scrolling when content exceeds viewport. */
-function refreshTechnicalRail(){
-  const rail=document.getElementById('right-rail');
-  if(!rail)return;
-  const technical=document.body.classList.contains('technical-mode');
-  rail.style.overflowY=technical?'auto':'auto';
-  rail.style.overflowX='hidden';
-  rail.style.maxHeight='100%';
-  rail.style.scrollbarWidth='thin';
+/* Keep debris independently updated even when no normal satellite layer exists. */
+if(typeof updatePositions==='function'){
+  const _updatePositions=updatePositions;
+  updatePositions=function(){
+    const result=_updatePositions();
+    if(debrisPoints?.isInstancedMesh){
+      updateSatelliteIconGeometry();
+    }
+    return result;
+  };
 }
-document.getElementById('ui-mode')?.addEventListener('change',()=>setTimeout(refreshTechnicalRail,50));
-setTimeout(refreshTechnicalRail,1200);
+
+/* Ensure controls are never hidden/disabled by empty-state logic. */
+function syncTrackControls(){
+  const has=!!selectedSatellite;
+  const track=document.getElementById('track-satellite-btn');
+  const share=document.getElementById('share-satellite-btn');
+  if(track)track.disabled=!has;
+  if(share)share.disabled=!has;
+}
+setInterval(syncTrackControls,500);
+
 })();
 </script>
+
 
 </body></html>
